@@ -1,0 +1,43 @@
+[tool.black]
+line-length = 80
+target-version = ['py314']
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+[tool.pyright]
+include = [
+    "src/raceway/**/*.py"
+]
+exclude = [
+    "**/__pycache__",
+]
+
+[tool.hatch]
+
+[tool.hatch.env]
+
+[tool.hatch.version]
+path = "src/raceway/__version__.py"
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "raceway"
+description = "Simple dependency injection system. "
+dynamic = ["version"]
+dependencies = []
+authors = [
+  { name="Ian Wilson", email="ian@gardentheory.com" },
+]
+requires-python = ">=3.14"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
