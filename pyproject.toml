@@ -39,6 +39,7 @@ build-backend = "hatchling.build"
 [project]
 name = "raceway"
 description = "Simple dependency injection system. "
+readme = "README.rst"
 dynamic = ["version"]
 dependencies = []
 authors = [
@@ -51,4 +52,6 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
-homepage="https://github.com/ianjosephwilson/raceway"
+
+[project.urls]
+GitHub="https://github.com/ianjosephwilson/raceway"
