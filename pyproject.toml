@@ -21,6 +21,16 @@ exclude = [
 [tool.hatch.version]
 path = "src/raceway/__version__.py"
 
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+include = [
+    "src/raceway/*.py",
+    "tests/"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/raceway"]
+
 [build-system]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
@@ -41,3 +51,4 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
+
