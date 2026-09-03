@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from .exc import RacewayError
-from .registry import Registry
+from .registry import configure_registry
 from .protocols import ScopeType, IRegistry, IPlanner, IMarker, IRegistration
 
 
@@ -84,5 +84,5 @@ class Planner(IPlanner):
 
     def create_registry(self) -> IRegistry:
         self.validate_reg_queue()
-        return Registry(registrations=self.reg_queue)
+        return configure_registry(registrations=tuple([(proto, reg) for (proto, reg) in self.reg_queue.items()]))
 

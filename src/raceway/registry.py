@@ -1,15 +1,19 @@
 from dataclasses import dataclass
 from typing import Literal
 from collections.abc import Callable
+from types import MappingProxyType
 
 from .protocols import IMarker, IRegistration, IRegistry
 
 
-@dataclass
+def configure_registry(registrations: tuple[tuple[IMarker, IRegistration], ...]) -> IRegistry:
+    return Registry(registrations=MappingProxyType(dict(registrations)))
+
+
+@dataclass(frozen=True)
 class Registry(IRegistry):
 
-    registrations: dict[IMarker, IRegistration] # @TODO: frozendict
-    """ Protocol factory registration lookup. """
+    registrations: MappingProxyType[IMarker, IRegistration]
 
     def find(self, proto: IMarker) -> IRegistration | None:
         return self.registrations.get(proto, None)
