@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Literal
-from collections.abc import Callable
 from types import MappingProxyType
 
 from .protocols import IMarker, IRegistration, IRegistry
 
 
-def configure_registry(registrations: tuple[tuple[IMarker, IRegistration], ...]) -> IRegistry:
+def configure_registry(
+    registrations: tuple[tuple[IMarker, IRegistration], ...],
+) -> IRegistry:
     return Registry(registrations=MappingProxyType(dict(registrations)))
 
 

@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
 
 from .protocols import IMarker, IService, ScopeType, IDepSpec, IRegistration
 
@@ -20,4 +19,4 @@ class Registration(IRegistration):
     dep_specs: tuple[tuple[str, IDepSpec], ...]
     """ Tuple of name/spec pairs that must be resolved to pass to factory. """
 
-    scope: ScopeType = 'startup'
+    scope: ScopeType = "startup"

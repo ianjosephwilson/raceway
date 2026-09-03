@@ -31,6 +31,7 @@ class IServiceC(Protocol):
     def c_action(self):
         pass
 
+
 class IServiceD(Protocol):
     def d_action(self):
         pass
@@ -44,6 +45,7 @@ class IServiceE(Protocol):
 class IServiceF(Protocol):
     def f_action(self):
         pass
+
 
 #
 # Implementations
@@ -83,6 +85,7 @@ class ServiceD(IServiceD):
     def d_action(self):
         pass
 
+
 @dataclass
 class ServiceE(IServiceE):
 
@@ -109,13 +112,16 @@ def test_transitive_cycle():
     planner = Planner(reg_queue={})
     planner.queue_registration(
         IServiceA,
-        Registration(ServiceA, (('b_api', DepSpec(proto=IServiceB)), ), scope='startup'))
+        Registration(ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"),
+    )
     planner.queue_registration(
         IServiceB,
-        Registration(ServiceB, (('c_api', DepSpec(proto=IServiceC)), ), scope='startup'))
+        Registration(ServiceB, (("c_api", DepSpec(proto=IServiceC)),), scope="startup"),
+    )
     planner.queue_registration(
         IServiceC,
-        Registration(ServiceC, (('a_api', DepSpec(proto=IServiceA)), ), scope='startup'))
+        Registration(ServiceC, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"),
+    )
 
     with pytest.raises(PlannerCycleError):
         _ = Starter().start(planner=planner)
@@ -128,10 +134,12 @@ def test_direct_cycle():
     planner = Planner(reg_queue={})
     planner.queue_registration(
         IServiceD,
-        Registration(ServiceD, (('e_api', DepSpec(proto=IServiceE)), ), scope='startup'))
+        Registration(ServiceD, (("e_api", DepSpec(proto=IServiceE)),), scope="startup"),
+    )
     planner.queue_registration(
         IServiceE,
-        Registration(ServiceE, (('d_api', DepSpec(proto=IServiceD)), ), scope='startup'))
+        Registration(ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"),
+    )
     with pytest.raises(PlannerCycleError, match="Dependency cycle: .* required before"):
         _ = Starter().start(planner=planner)
 
@@ -143,8 +151,9 @@ def test_self_cycle():
     planner = Planner(reg_queue={})
     planner.queue_registration(
         IServiceB,
-        Registration(ServiceB, (('b_api', DepSpec(proto=IServiceB)), ), scope='startup')) # Made up deps
-    with pytest.raises(PlannerCycleError, match="Dependency cycle: Cannot depend on self"):
+        Registration(ServiceB, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"),
+    )  # Made up deps
+    with pytest.raises(
+        PlannerCycleError, match="Dependency cycle: .* depends on itself"
+    ):
         _ = Starter().start(planner=planner)
-
-

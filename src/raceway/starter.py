@@ -27,4 +27,3 @@ class Starter(IStarter):
         registry = planner.create_registry()
         startup_task = StartupTask()
         return configure_container(registry=registry, startup_task=startup_task)
-
