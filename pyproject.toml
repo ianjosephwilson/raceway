@@ -1,11 +1,12 @@
 [tool.black]
-line-length = 80
 target-version = ['py314']
+
 
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
+
 [tool.pyright]
 include = [
     "src/raceway/**/*.py"
@@ -15,6 +16,7 @@ exclude = [
 ]
 
 [tool.hatch]
+installer = "pip"
 
 [tool.hatch.env]
 
@@ -35,6 +37,15 @@ packages = ["src/raceway"]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest",
+    "pyright",
+    "flake8",
+    "flake8-bugbear",
+    "black",
+    "twine",
+]
 
 [project]
 name = "raceway"
