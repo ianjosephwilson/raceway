@@ -73,8 +73,8 @@ class Container(IContainer):
             # and fail if they aren't for now?
             v = task_cache.get(proto, NOT_SET)
             if v is NOT_SET:
-                v = self.make_service(proto, reg, task=task)
-                task_cache[proto] = v
+                maybe_v = self.make_service(proto, reg, task=task)
+                v = task_cache.setdefault(proto, maybe_v)
             return v
         elif reg.scope == 'task':
             if task is None:
@@ -91,8 +91,8 @@ class Container(IContainer):
             # stampede situation.
             v = task_cache.get(proto, NOT_SET)
             if v is NOT_SET:
-                v = self.make_service(proto, reg, task=task)
-                task_cache[proto] = v
+                maybe_v = self.make_service(proto, reg, task=task)
+                v = task_cache.setdefault(proto, maybe_v)
             return v
         else:
             return self.make_service(proto, reg, task=task)
