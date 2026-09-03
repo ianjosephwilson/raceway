@@ -8,7 +8,7 @@ from .registry import Registry
 from .protocols import ScopeType, IRegistry, IPlanner, IMarker, IRegistration
 
 
-def can_depend_on(scope: ScopeType, dep_scope: ScopeType):
+def can_depend_on(scope: ScopeType, dep_scope: ScopeType) -> bool:
     if dep_scope == 'startup':
         return scope in ('call', 'task', 'startup')
     elif dep_scope == 'task':
@@ -34,7 +34,7 @@ class Planner(IPlanner):
     """
     reg_queue: dict[IMarker, IRegistration]
 
-    def queue_registration(self, proto: IMarker, reg: IRegistration):
+    def queue_registration(self, proto: IMarker, reg: IRegistration) -> None:
         if proto in self.reg_queue:
             raise PlannerError('Each protocol can only be registered once.')
         self.reg_queue[proto] = reg
