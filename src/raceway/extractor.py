@@ -1,15 +1,12 @@
 from annotationlib import Format, call_evaluate_function
 from collections.abc import Callable
-from dataclasses import dataclass, fields, is_dataclass, field, Field, replace
+from dataclasses import dataclass
 from inspect import isclass
 from typing import (
-    Any,
     get_origin,
     get_args,
     Annotated,
     get_type_hints,
-    Mapping,
-    Protocol,
     TypeAliasType,
     is_protocol,
 )
