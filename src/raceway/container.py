@@ -64,11 +64,11 @@ class Container(IContainer):
             if dep_spec.attr:
                 result = getattr(result, dep_spec.attr)
             if dep_spec.key:
-                result = result[dep_spec.key]
+                result = result[dep_spec.key] # type: ignore
             if dep_spec.call_kwargs is not None or dep_spec.call_args is not None:
                 call_kwargs = dict(dep_spec.call_kwargs) if dep_spec.call_kwargs else {}
                 call_args = dep_spec.call_args if dep_spec.call_args else  ()
-                result = result(*call_args, **call_kwargs)
+                result = result(*call_args, **call_kwargs) # type: ignore
             deps[dep_name] = result
         return reg.factory(**deps)
 
