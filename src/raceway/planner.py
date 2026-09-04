@@ -82,7 +82,7 @@ class Planner(IPlanner):
                 if end_idx is not None:
                     if start_idx > end_idx:
                         raise PlannerCycleError(
-                            f"Dependency cycle: {start} depends on {end} but {end} required before {start}." # noqa B950
+                            f"Dependency cycle: {start} depends on {end} but {end} required before {start}."  # noqa B950
                         )
                     elif start_idx == end_idx:
                         raise PlannerCycleError(

@@ -64,11 +64,11 @@ class Container(IContainer):
             if dep_spec.attr:
                 result = getattr(result, dep_spec.attr)
             if dep_spec.key:
-                result = result[dep_spec.key] # type: ignore
+                result = result[dep_spec.key]  # type: ignore
             if dep_spec.call_kwargs is not None or dep_spec.call_args is not None:
                 call_kwargs = dict(dep_spec.call_kwargs) if dep_spec.call_kwargs else {}
-                call_args = dep_spec.call_args if dep_spec.call_args else  ()
-                result = result(*call_args, **call_kwargs) # type: ignore
+                call_args = dep_spec.call_args if dep_spec.call_args else ()
+                result = result(*call_args, **call_kwargs)  # type: ignore
             deps[dep_name] = result
         return reg.factory(**deps)
 
@@ -88,9 +88,7 @@ class Container(IContainer):
             else:
                 maybe_cache = create_task_cache()
                 # We use the *result* of setdefault to try to avoid the race condition.
-                task_cache = self.cache.setdefault(
-                    self.startup_task, maybe_cache
-                )
+                task_cache = self.cache.setdefault(self.startup_task, maybe_cache)
             v = task_cache.get(proto, NOT_SET)
             if v is NOT_SET:
                 maybe_v = self.make_service(proto, reg, task=task)

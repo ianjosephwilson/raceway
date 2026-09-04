@@ -34,6 +34,7 @@ class Cabled:
         fs_api: IFileSystem # without spec
 
     """
+
     proto: IMarker | None = None
     """Protocol that should be used. If None then try to use type hint as protocol."""
 
@@ -44,26 +45,29 @@ class Cabled:
 
     def to_dep_spec(self) -> DepSpec:
         if self.proto is None:
-            raise ExtractionError('Cannot generate DepSpec without protocol.')
-        return DepSpec(proto=self.proto, attr=self.attr, key=self.key, call_args=self.call_args, call_kwargs=self.call_kwargs)
+            raise ExtractionError("Cannot generate DepSpec without protocol.")
+        return DepSpec(
+            proto=self.proto,
+            attr=self.attr,
+            key=self.key,
+            call_args=self.call_args,
+            call_kwargs=self.call_kwargs,
+        )
 
 
 @dataclass
 class Extractor:
-    """ Extractor dependency specs from annotations. """
+    """Extractor dependency specs from annotations."""
 
-    can_resolve_without_spec: Callable[[object|type], bool] | None = None
+    can_resolve_without_spec: Callable[[object | type], bool] | None = None
     """ User could provide this as a factory kwargs during decoration. """
 
-    def _can_resolve_without_spec(self, proto: object|type) -> bool:
-        """ We only resolve protocols "automatically" right now. """
+    def _can_resolve_without_spec(self, proto: object | type) -> bool:
+        """We only resolve protocols "automatically" right now."""
         if self.can_resolve_without_spec is not None:
             return self.can_resolve_without_spec(proto)
         else:
-            return (
-                isinstance(proto, type) # for pyright
-                and is_protocol(proto)
-            )
+            return isinstance(proto, type) and is_protocol(proto)  # for pyright
 
     def extract(
         self,
@@ -105,4 +109,8 @@ class Extractor:
                 proto = hint
                 if proto and self._can_resolve_without_spec(proto):
                     cables.append((k, Cabled(proto=proto)))
-        return tuple((name, cable.to_dep_spec()) for name, cable in cables if cable.proto is not None)
+        return tuple(
+            (name, cable.to_dep_spec())
+            for name, cable in cables
+            if cable.proto is not None
+        )
