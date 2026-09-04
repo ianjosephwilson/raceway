@@ -55,15 +55,18 @@ class Cabled:
 class Extractor:
     """ Extractor dependency specs from annotations. """
 
-    can_resolve_without_spec: Callable[[object], bool] | None = None
+    can_resolve_without_spec: Callable[[object|type], bool] | None = None
     """ User could provide this as a factory kwargs during decoration. """
 
-    def _can_resolve_without_spec(self, proto: object) -> bool:
+    def _can_resolve_without_spec(self, proto: object|type) -> bool:
         """ We only resolve protocols "automatically" right now. """
         if self.can_resolve_without_spec is not None:
             return self.can_resolve_without_spec(proto)
         else:
-            return is_protocol(proto)
+            return (
+                isinstance(proto, type) # for pyright
+                and is_protocol(proto)
+            )
 
     def extract(
         self,
