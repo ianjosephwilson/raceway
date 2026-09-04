@@ -13,6 +13,9 @@ type ITask = object
 type ScopeType = Literal["task"] | Literal["startup"] | Literal["call"]
 
 
+type IServiceFactory = Callable[..., IService]
+
+
 class IDepSpec(Protocol):
     proto: IMarker
 
