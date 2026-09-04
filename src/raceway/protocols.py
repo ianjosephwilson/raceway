@@ -18,6 +18,10 @@ type IServiceFactory = Callable[..., IService]
 
 class IDepSpec(Protocol):
     proto: IMarker
+    attr: str | None
+    key: str | None
+    call_args: tuple | None = None
+    call_kwargs: tuple[tuple[str, object], ...] | None = None
 
 
 class IRegistration(Protocol):
