@@ -8,6 +8,14 @@ from .protocols import IMarker, IService, ScopeType, IDepSpec, IRegistration
 class DepSpec(IDepSpec):
 
     proto: IMarker
+    attr: str | None = None
+    """ Attribute name to get after resolution. """
+    key: str | None = None
+    """ Key to index after resolution. """
+    call_args: tuple | None = None
+    """ Positional arguments to use on callable after resolution. """
+    call_kwargs: tuple[tuple[str, object], ...] | None = None
+    """ Keyword argument *pairs* to use on callable after resolution. """
 
 
 @dataclass
