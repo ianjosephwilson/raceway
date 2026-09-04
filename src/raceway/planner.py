@@ -66,7 +66,9 @@ class Planner(IPlanner):
             self._validate_registration(proto, dep_lookup)
 
     def _validate_registration(
-        self, proto: IMarker, dep_lookup: dict[IMarker, list[IMarker]]
+        self,
+        proto: IMarker,
+        dep_lookup: dict[IMarker, list[IMarker]],
     ) -> None:
         """Validate registration, mostly just checks for cycles."""
         last_idx = 0
@@ -76,8 +78,6 @@ class Planner(IPlanner):
             start = resolve.pop()
             start_idx = topo[start]
             for end in dep_lookup.get(start, ()):
-                # A -> B; B -> C; etc. C -> A
-                # start in topo and end in topo and
                 end_idx = topo.get(end, None)
                 if end_idx is not None:
                     if start_idx > end_idx:
