@@ -52,12 +52,12 @@ class Container(IContainer):
 
     startup_task: ITask
 
-    def make_service(
+    def make_service[S](
         self,
-        proto: IMarker,
+        proto: type[S],
         reg: IRegistration,
         task: ITask | None = None,
-    ) -> IService:
+    ) -> S:
         deps = {}
         for dep_name, dep_spec in reg.dep_specs:
             result = self.find_service(dep_spec.proto, task=task)
@@ -66,17 +66,21 @@ class Container(IContainer):
             if dep_spec.key:
                 result = result[dep_spec.key]  # type: ignore
             if dep_spec.call_kwargs is not None or dep_spec.call_args is not None:
-                call_kwargs = dict(dep_spec.call_kwargs) if dep_spec.call_kwargs else {}
-                call_args = dep_spec.call_args if dep_spec.call_args else ()
+                call_kwargs = (
+                    dict(dep_spec.call_kwargs)
+                    if dep_spec.call_kwargs is not None
+                    else {}
+                )
+                call_args = dep_spec.call_args if dep_spec.call_args is not None else ()
                 result = result(*call_args, **call_kwargs)  # type: ignore
             deps[dep_name] = result
         return reg.factory(**deps)
 
-    def find_service(
+    def find_service[T](
         self,
-        proto: IMarker,
+        proto: type[T],
         task: ITask | None = None,
-    ) -> IService:
+    ) -> T:
         reg = self.registry.find(proto)
         if reg is None:
             raise ContainerError(
