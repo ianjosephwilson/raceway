@@ -12,7 +12,6 @@ from typing import (
 )
 
 from .exc import RacewayError
-from .protocols import IServiceFactory, IMarker
 from .registration import DepSpec
 
 
@@ -21,7 +20,7 @@ class ExtractionError(RacewayError):
 
 
 @dataclass
-class Cabled:
+class Cabled[S]:
     """
     Mark a dependency as "Cabled" to have it injected.
 
@@ -35,7 +34,7 @@ class Cabled:
 
     """
 
-    proto: IMarker | None = None
+    proto: type[S] | None = None
     """Protocol that should be used. If None then try to use type hint as protocol."""
 
     attr: str | None = None
@@ -71,7 +70,7 @@ class Extractor:
 
     def extract(
         self,
-        service_factory: IServiceFactory,
+        service_factory: Callable,
     ) -> tuple[tuple[str, DepSpec], ...]:
         """
         Extract any dependency specifications we find.
