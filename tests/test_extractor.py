@@ -35,7 +35,15 @@ class PatternService:
 @dataclass
 class ParamsService:
 
-    file_params_api: Annotated[IFile, Cabled(key="test_key", attr="test_attr", call_args=("test_call_arg",), call_kwargs=(("test_call_kwarg", 1),))]
+    file_params_api: Annotated[
+        IFile,
+        Cabled(
+            key="test_key",
+            attr="test_attr",
+            call_args=("test_call_arg",),
+            call_kwargs=(("test_call_kwarg", 1),),
+        ),
+    ]
     """ Kitchen sink of various configuration params. """
 
 
@@ -50,7 +58,7 @@ class TestExtract:
         dep_specs = default_ex.extract(PatternService)
         lookup = dict(dep_specs)
         for i in range(5):
-            k = f'file{i}_api'
+            k = f"file{i}_api"
             assert k in lookup
             assert lookup[k].proto is IFile
 
@@ -61,4 +69,7 @@ class TestExtract:
         assert lookup["file_params_api"].key == "test_key"
         assert lookup["file_params_api"].attr == "test_attr"
         assert lookup["file_params_api"].call_args[0] == "test_call_arg"
-        assert lookup["file_params_api"].call_kwargs[0][0] == "test_call_kwarg" and lookup["file_params_api"].call_kwargs[0][1] == 1
+        assert (
+            lookup["file_params_api"].call_kwargs[0][0] == "test_call_kwarg"
+            and lookup["file_params_api"].call_kwargs[0][1] == 1
+        )

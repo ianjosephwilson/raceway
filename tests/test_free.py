@@ -5,8 +5,9 @@ Setup a simple task run to see if this thing works at all.
 from contextvars import ContextVar
 from dataclasses import dataclass
 import gc
-from typing import Protocol
+from typing import Protocol, cast
 
+from raceway.container import Container
 from raceway.starter import Starter
 from raceway.planner import Planner
 from raceway.registration import Registration, DepSpec
@@ -20,7 +21,7 @@ class ITask(Protocol):
 
 
 class IStrategy(Protocol):
-    def calculate(self) -> int: ...
+    def calculate(self, multiplier: int) -> int: ...
 
 
 class IConfig(Protocol):
@@ -71,7 +72,7 @@ class Task(ITask):
         return id(self)
 
 
-CurrentTask: ITask | None = ContextVar("CurrentTask", default=None)
+CurrentTask: ContextVar[ITask | None] = ContextVar("CurrentTask", default=None)
 
 
 def test_free():
@@ -122,7 +123,10 @@ def test_free():
         ),
     )
 
-    container = Starter().start(planner=planner)
+    #
+    # We cast this because we are going to introspect it.
+    #
+    container = cast(Container, Starter().start(planner=planner))
     config = container.find_service(IConfig)  # Save off to keep cached.
     results = [
         handle_task(container),
