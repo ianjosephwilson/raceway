@@ -1,7 +1,8 @@
 from collections.abc import Callable
 from typing import Protocol, Literal
 
-type IMarker = object  # Hashable # @TODO: I'm not sure this makes sense.
+
+type IMarker = object
 
 
 type IService = object
@@ -13,19 +14,16 @@ type ITask = object
 type ScopeType = Literal["task"] | Literal["startup"] | Literal["call"]
 
 
-type IServiceFactory = Callable[..., IService]
-
-
-class IDepSpec(Protocol):
-    proto: IMarker
+class IDepSpec[T](Protocol):
+    proto: type[T]
     attr: str | None
     key: str | None
     call_args: tuple | None = None
     call_kwargs: tuple[tuple[str, object], ...] | None = None
 
 
-class IRegistration(Protocol):
-    factory: Callable[..., IService]
+class IRegistration[T](Protocol):
+    factory: Callable[..., T]
     dep_specs: tuple[tuple[str, IDepSpec], ...]
     scope: ScopeType = "startup"
 
@@ -38,18 +36,18 @@ class IRegistry(Protocol):
 
 
 class IContainer(Protocol):
-    def make_service(
+    """def make_service[T](
         self,
-        proto: IMarker,
+        proto: type[T],
         reg: IRegistration,
         task: ITask | None = None,
-    ) -> IService: ...
+    ) -> T: ..."""
 
-    def find_service(
+    def find_service[T](
         self,
-        proto: IMarker,
+        proto: type[T],
         task: ITask | None = None,
-    ) -> IService: ...
+    ) -> T: ...
 
 
 class IPlanner(Protocol):
