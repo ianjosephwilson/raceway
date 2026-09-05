@@ -1,6 +1,6 @@
 from annotationlib import Format, call_evaluate_function
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from inspect import isclass
 from typing import (
     get_origin,
