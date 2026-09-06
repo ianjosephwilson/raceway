@@ -106,7 +106,7 @@ class ServiceF(IServiceF):
 
 @pytest.fixture
 def planner():
-    """ Create an empty planner. """
+    """Create an empty planner."""
     return Planner(reg_queue={})
 
 
@@ -119,20 +119,25 @@ class TestCycleCheck:
 
         planner.queue_registration(
             IServiceA,
-            Registration(ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"),
+            Registration(
+                ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"
+            ),
         )
         planner.queue_registration(
             IServiceB,
-            Registration(ServiceB, (("c_api", DepSpec(proto=IServiceC)),), scope="startup"),
+            Registration(
+                ServiceB, (("c_api", DepSpec(proto=IServiceC)),), scope="startup"
+            ),
         )
         planner.queue_registration(
             IServiceC,
-            Registration(ServiceC, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"),
+            Registration(
+                ServiceC, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"
+            ),
         )
 
         with pytest.raises(PlannerCycleError):
             planner.validate_reg_queue()
-
 
     def test_direct_cycle(self, planner):
         """
@@ -140,15 +145,20 @@ class TestCycleCheck:
         """
         planner.queue_registration(
             IServiceD,
-            Registration(ServiceD, (("e_api", DepSpec(proto=IServiceE)),), scope="startup"),
+            Registration(
+                ServiceD, (("e_api", DepSpec(proto=IServiceE)),), scope="startup"
+            ),
         )
         planner.queue_registration(
             IServiceE,
-            Registration(ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"),
+            Registration(
+                ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"
+            ),
         )
-        with pytest.raises(PlannerCycleError, match="Dependency cycle: .* required before"):
+        with pytest.raises(
+            PlannerCycleError, match="Dependency cycle: .* required before"
+        ):
             planner.validate_reg_queue()
-
 
     def test_self_cycle(self, planner):
         """
@@ -156,7 +166,9 @@ class TestCycleCheck:
         """
         planner.queue_registration(
             IServiceB,
-            Registration(ServiceB, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"),
+            Registration(
+                ServiceB, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"
+            ),
         )  # Made up deps
         with pytest.raises(
             PlannerCycleError, match="Dependency cycle: .* depends on itself"
@@ -167,14 +179,26 @@ class TestCycleCheck:
 def test_duplicate_check(planner):
     planner.queue_registration(IServiceA, Registration(ServiceA, (), scope="startup"))
     with pytest.raises(PlannerError, match="Each protocol can only be registered once"):
-        _ = planner.queue_registration(IServiceA, Registration(ServiceA, (), scope="startup"))
+        _ = planner.queue_registration(
+            IServiceA, Registration(ServiceA, (), scope="startup")
+        )
 
 
-@pytest.mark.parametrize(("dep_scope","parent_scope"), [("task", "startup"), ("call", "startup"), ("call", "task")])
+@pytest.mark.parametrize(
+    ("dep_scope", "parent_scope"),
+    [
+        ("task", "startup"),
+        ("call", "startup"),
+        ("call", "task"),
+    ],
+)
 def test_scope_check(planner, dep_scope, parent_scope):
-    planner.queue_registration(IServiceB, Registration(ServiceB, (), scope=dep_scope)) # no deps
+    planner.queue_registration(IServiceB, Registration(ServiceB, (), scope=dep_scope))
     planner.queue_registration(
-            IServiceA,
-            Registration(ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope=parent_scope))
+        IServiceA,
+        Registration(
+            ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope=parent_scope
+        ),
+    )
     with pytest.raises(PlannerError, match="Scope mismatch"):
         planner.validate_reg_queue()
