@@ -1,7 +1,3 @@
-"""
-Setup a simple task run to see if this thing works at all.
-"""
-
 from contextvars import ContextVar
 from dataclasses import dataclass
 import gc
@@ -75,15 +71,21 @@ class Task(ITask):
 CurrentTask: ContextVar[ITask | None] = ContextVar("CurrentTask", default=None)
 
 
+def handle_task(container) -> int:
+    with CurrentTask.set(Task()):  # Set this for the duration
+        runner = container.find_service(ITaskRunner, task=CurrentTask.get())
+        return runner.run()
+
+
+def get_current_task() -> ITask:
+    task = CurrentTask.get()
+    if task is None:
+        raise AssertionError("Task is not set!")
+    return task
+
+
 def test_free():
     """Simple recursive test, no concurrency at all."""
-
-    def get_current_task() -> ITask:
-        task = CurrentTask.get()
-        if task is None:
-            raise AssertionError("Task is not set!")
-        return task
-
     planner = Planner(reg_queue={})
     planner.queue_registration(
         ITaskRunner,
@@ -124,7 +126,7 @@ def test_free():
     )
 
     #
-    # We cast this because we are going to introspect it.
+    # We cast this because we are going to introspect the non-public API.
     #
     container = cast(Container, Starter().start(planner=planner))
     config = container.find_service(IConfig)  # Save off to keep cached.
@@ -146,7 +148,3 @@ def test_free():
     assert config
 
 
-def handle_task(container) -> int:
-    with CurrentTask.set(Task()):  # Set this for the duration
-        runner = container.find_service(ITaskRunner, task=CurrentTask.get())
-        return runner.run()
