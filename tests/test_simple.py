@@ -1,3 +1,6 @@
+"""
+Full 
+"""
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -18,7 +21,7 @@ class IService1(Protocol):
 class Service1:
 
     def action1(self) -> str:
-        return "1 is ok"
+        return "1;"
 
 
 class IService2(Protocol):
@@ -32,10 +35,7 @@ class Service2:
     api1: IService1
 
     def action2(self):
-        return f"""
-{self.api1.action1()}
-2 is ok, too
-"""
+        return self.api1.action1() + "2;"
 
 
 @dataclass()
@@ -60,11 +60,9 @@ def test_main():
             scope="task",
         ),
     )
-
     container = Starter().start(planner=planner)
-
     task1 = DummyRequest()
     api2 = container.find_service(IService2, task=task1)
-    assert "" in api2.action2()
+    assert api2.action2() == "1;2;"
     api2 = container.find_service(IService2, task=task1)
-    assert "" in api2.action2()
+    assert api2.action2() == "1;2;"
