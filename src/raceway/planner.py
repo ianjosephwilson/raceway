@@ -25,6 +25,10 @@ class PlannerCycleError(PlannerError):
     pass
 
 
+def configure_planner() -> IPlanner:
+    return Planner(reg_queue={})
+
+
 @dataclass
 class Planner(IPlanner):
     """
