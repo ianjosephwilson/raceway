@@ -154,9 +154,7 @@ class TestCycleCheck:
                 ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"
             ),
         )
-        with pytest.raises(
-            PlannerError, match="Dependency cycle: .* required before"
-        ):
+        with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
             planner.validate_reg_queue()
 
     def test_self_cycle(self, planner):

@@ -1,6 +1,7 @@
 """
-Full 
+Full
 """
+
 from dataclasses import dataclass
 from typing import Protocol
 

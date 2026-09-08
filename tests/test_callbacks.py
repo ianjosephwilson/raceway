@@ -14,16 +14,19 @@ def test_feed_loader_with_mock():
     from raceway.callbacks import LoaderCtx
     from raceway.planner import configure_planner
     from raceway.extractor import Extractor
+
     extractor = Extractor()
     planner = configure_planner()
     loader = configure_loader(planner=planner, extractor=extractor)
-    status = {'fed': False}
+    status = {"fed": False}
+
     def feed():
         # Noop that just checks we got the right thing and then actually ran.
-        status['fed'] = True
+        status["fed"] = True
         assert LoaderCtx.get() == loader
+
     feed_loader(loader, feed)
-    assert status['fed']
+    assert status["fed"]
 
 
 class IMath(Protocol):
@@ -65,18 +68,22 @@ def test_feed_loader_callback():
     from raceway.callbacks import LoaderCtx
     from raceway.planner import configure_planner
     from raceway.extractor import Extractor
+
     extractor = Extractor()
     planner = configure_planner()
     loader = configure_loader(planner=planner, extractor=extractor)
+
     def our_attach(service_factory, callback, category=None):
         service_factory.__raceway_cb__ = callback
+
     def feed():
         for iface, cls in [(IMath, MathService), (ICalculator, CalculatorService)]:
             # Execute the decorator as if it was applied with @.
-            configure_as_service(iface, attach=our_attach, scope='startup')(cls)
+            configure_as_service(iface, attach=our_attach, scope="startup")(cls)
             # Immdiately execute the callback as if it was scanned.
             cls.__raceway_cb__(None, None, None)
             del cls.__raceway_cb__
+
     feed_loader(loader, feed)
     container = Starter().start(planner=planner)
     calculator_api = container.find_service(ICalculator)

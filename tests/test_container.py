@@ -33,7 +33,7 @@ class IConfig(Protocol):
 class ConfigService(IConfig):
 
     def get_base_path(self, env: str, level: str) -> str:
-        if env == 'mars':
+        if env == "mars":
             return f"/app-mars/{level}"
         else:
             return f"/app-earth/{level}"
@@ -61,7 +61,15 @@ class ColorizerService(IColorizer):
         tuple[str, ...], Cabled(IConfig, attr="settings", key="primary_colors")
     ]
 
-    base_path: Annotated[str, Cabled(IConfig, attr="get_base_path", call_args=('mars',), call_kwargs=(('level', '1'),))]
+    base_path: Annotated[
+        str,
+        Cabled(
+            IConfig,
+            attr="get_base_path",
+            call_args=("mars",),
+            call_kwargs=(("level", "1"),),
+        ),
+    ]
 
     def colorize_int(self, int_value: int) -> str:
         return self.primary_colors[abs(int_value % 3)]

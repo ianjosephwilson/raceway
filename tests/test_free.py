@@ -146,5 +146,3 @@ def test_free():
         len(list(list(container.cache.items())[0][1].items())) == 1
     ), "Only config should be in it."
     assert config
-
-
