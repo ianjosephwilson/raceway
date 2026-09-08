@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from raceway.callbacks import configure_loader, feed_loader, configure_as_service
+from raceway.callbacks import (
+    configure_loader,
+    feed_loader,
+    configure_as_service,
+    LoaderCtx,
+)
+from raceway.extractor import configure_extractor
+from raceway.planner import configure_planner
 from raceway.starter import Starter
 
 
@@ -11,11 +18,8 @@ def test_feed_loader_with_mock():
 
     @TODO: We might just remove this test eventually. I think its redundant.
     """
-    from raceway.callbacks import LoaderCtx
-    from raceway.planner import configure_planner
-    from raceway.extractor import Extractor
 
-    extractor = Extractor()
+    extractor = configure_extractor()
     planner = configure_planner()
     loader = configure_loader(planner=planner, extractor=extractor)
     status = {"fed": False}
@@ -65,11 +69,7 @@ def test_feed_loader_callback():
     - make a container
     - add 2 integers and check the answer!!!
     """
-    from raceway.callbacks import LoaderCtx
-    from raceway.planner import configure_planner
-    from raceway.extractor import Extractor
-
-    extractor = Extractor()
+    extractor = configure_extractor()
     planner = configure_planner()
     loader = configure_loader(planner=planner, extractor=extractor)
 
