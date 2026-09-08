@@ -23,7 +23,7 @@ class Settings(ISettings):
 
 
 class IConfig(Protocol):
-    def get_base_path(self) -> str: ...
+    def get_base_path(self, env: str, level: str) -> str: ...
 
     @property
     def settings(self) -> ISettings: ...
@@ -32,8 +32,11 @@ class IConfig(Protocol):
 @dataclass
 class ConfigService(IConfig):
 
-    def get_base_path(self) -> str:
-        return "/app"
+    def get_base_path(self, env: str, level: str) -> str:
+        if env == 'mars':
+            return f"/app-mars/{level}"
+        else:
+            return f"/app-earth/{level}"
 
     @property
     def settings(self) -> ISettings:
@@ -58,7 +61,7 @@ class ColorizerService(IColorizer):
         tuple[str, ...], Cabled(IConfig, attr="settings", key="primary_colors")
     ]
 
-    base_path: Annotated[str, Cabled(IConfig, attr="get_base_path", call_args=())]
+    base_path: Annotated[str, Cabled(IConfig, attr="get_base_path", call_args=('mars',), call_kwargs=(('level', '1'),))]
 
     def colorize_int(self, int_value: int) -> str:
         return self.primary_colors[abs(int_value % 3)]
@@ -89,5 +92,4 @@ class TestMakeService:
 
     def test_call(self, container: IContainer):
         colorizer_api = container.find_service(IColorizer, task=None)
-        print(f"{colorizer_api=}")
-        assert colorizer_api.base_path == "/app"
+        assert colorizer_api.base_path == "/app-mars/1"
