@@ -1,6 +1,7 @@
 """
 This module provides decorators that attach callbacks that venusian can find.
 """
+
 from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, is_dataclass
@@ -11,8 +12,7 @@ from .exc import RacewayError
 from .protocols import ILoader, IPlanner, IExtractor, ScopeType
 from .registration import Registration
 
-
-DEFAULT_CATEGORY = 'raceway.service'
+DEFAULT_CATEGORY = "raceway.service"
 
 
 # @TODO: Make sure this the latest and greatest pattern for doing this.
@@ -20,12 +20,13 @@ DEFAULT_CATEGORY = 'raceway.service'
 # decorators without another attach.
 try:
     import venusian
+
     venusian_attach = venusian.attach
 except ImportError:
     venusian_attach = None
 
 
-LoaderCtx: ContextVar[ILoader|None] = ContextVar('LoaderCtx')
+LoaderCtx: ContextVar[ILoader | None] = ContextVar("LoaderCtx")
 """ContextVar that holds the loader during scanning for callbacks."""
 
 
@@ -46,7 +47,7 @@ def configure_loader(planner: IPlanner, extractor: IExtractor) -> ILoader:
 def feed_loader(
     loader: ILoader,
     feed: Callable[[], None],
-    cv: ContextVar[ILoader|None] = LoaderCtx,
+    cv: ContextVar[ILoader | None] = LoaderCtx,
 ):
     """Setup the loader context and then call feed."""
     with cv.set(loader):
@@ -54,12 +55,12 @@ def feed_loader(
 
 
 def configure_as_service(
-    proto: object|None=None,
-    cv: ContextVar[ILoader|None]=LoaderCtx,
-    attach: Callable | None=venusian_attach,
-    scope: ScopeType="task",
-    wrap_in_dataclass: bool=True,
-    category: str=DEFAULT_CATEGORY
+    proto: object | None = None,
+    cv: ContextVar[ILoader | None] = LoaderCtx,
+    attach: Callable | None = venusian_attach,
+    scope: ScopeType = "task",
+    wrap_in_dataclass: bool = True,
+    category: str = DEFAULT_CATEGORY,
 ) -> Callable:
     """
     Decorate a service factory with a callback that can be executed to feed
@@ -82,16 +83,26 @@ def configure_as_service(
         # Wrap the service class in a dataclass here in case it is needed
         # at anypoint in the future.  This is almost just for convenience
         # and maybe it should be moved to an extended decorator.
-        if wrap_in_dataclass and isclass(service_factory) and not is_dataclass(service_factory):
+        if (
+            wrap_in_dataclass
+            and isclass(service_factory)
+            and not is_dataclass(service_factory)
+        ):
             service_factory = dataclass(service_factory)
 
         def callback(*_):
             """Callback for venusian scan."""
             loader = cv.get()
             if loader is None:
-                raise CallbackError(f'{cv} context variable must be set when callback fires.')
+                raise CallbackError(
+                    f"{cv} context variable must be set when callback fires."
+                )
             dep_specs = loader.extractor.extract(service_factory)
-            loader.planner.queue_registration(register_proto, Registration(service_factory, dep_specs, scope=scope))
+            loader.planner.queue_registration(
+                register_proto, Registration(service_factory, dep_specs, scope=scope)
+            )
+
         attach(service_factory, callback, category=category)
         return service_factory
+
     return wrapper

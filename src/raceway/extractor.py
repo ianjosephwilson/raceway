@@ -1,7 +1,8 @@
 """
 @TODO: The Cabled/DepSpec redundancy is kind of growing, not sure if it matters.
-Maybe they are really meant to be independent and will grow further apart?  
+Maybe they are really meant to be independent and will grow further apart?
 """
+
 from annotationlib import Format, call_evaluate_function
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -52,7 +53,7 @@ class Cabled[S]:
         )
 
 
-def validate_call_args(call_args) -> tuple|None:
+def validate_call_args(call_args) -> tuple | None:
     """
     Validate call args.
 
@@ -61,11 +62,11 @@ def validate_call_args(call_args) -> tuple|None:
     Also this is mainly because this is so easier to paren-soup into a weird bug.
     """
     if call_args is not None and not isinstance(call_args, tuple):
-        raise ExtractionError('Call args must be None|tuple')
+        raise ExtractionError("Call args must be None|tuple")
     return call_args
 
 
-def validate_call_kwargs(call_kwargs) -> tuple[tuple[str, object], ...]|None:
+def validate_call_kwargs(call_kwargs) -> tuple[tuple[str, object], ...] | None:
     """
     Validate call kwargs.
 
@@ -73,13 +74,19 @@ def validate_call_kwargs(call_kwargs) -> tuple[tuple[str, object], ...]|None:
 
     Also this is mainly because this is so easier to paren-soup into a weird bug.
     """
-    type_error_msg = 'Call kwargs must be None|tuple[tuple[str, object], ...].'
+    type_error_msg = "Call kwargs must be None|tuple[tuple[str, object], ...]."
     if call_kwargs is not None:
         if not isinstance(call_kwargs, tuple):
             raise ExtractionError(type_error_msg)
         for arg in call_kwargs:
-            if not isinstance(arg, tuple) or len(arg) != 2 or not isinstance(arg[0], str):
-                raise ExtractionError('Call kwargs must be None|tuple[tuple[str, object], ...].')
+            if (
+                not isinstance(arg, tuple)
+                or len(arg) != 2
+                or not isinstance(arg[0], str)
+            ):
+                raise ExtractionError(
+                    "Call kwargs must be None|tuple[tuple[str, object], ...]."
+                )
     return call_kwargs
 
 
@@ -87,7 +94,9 @@ def default_can_resolve_without_spec(proto: object | type):
     return isinstance(proto, type) and is_protocol(proto)
 
 
-def configure_extractor(can_resolve_without_spec: Callable[[object | type], bool] | None = None) -> IExtractor:
+def configure_extractor(
+    can_resolve_without_spec: Callable[[object | type], bool] | None = None,
+) -> IExtractor:
     if can_resolve_without_spec is None:
         can_resolve_without_spec = default_can_resolve_without_spec
     return Extractor(can_resolve_without_spec=can_resolve_without_spec)

@@ -1,7 +1,6 @@
 from collections.abc import Callable
 from typing import Protocol, Literal
 
-
 type IMarker = object
 
 
