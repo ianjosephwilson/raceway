@@ -9,7 +9,6 @@ from raceway.registration import (
 )
 from raceway.planner import (
     Planner,
-    PlannerCycleError,
     PlannerError,
 )
 
@@ -136,7 +135,7 @@ class TestCycleCheck:
             ),
         )
 
-        with pytest.raises(PlannerCycleError):
+        with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
             planner.validate_reg_queue()
 
     def test_direct_cycle(self, planner):
@@ -156,7 +155,7 @@ class TestCycleCheck:
             ),
         )
         with pytest.raises(
-            PlannerCycleError, match="Dependency cycle: .* required before"
+            PlannerError, match="Dependency cycle: .* required before"
         ):
             planner.validate_reg_queue()
 
@@ -171,7 +170,7 @@ class TestCycleCheck:
             ),
         )  # Made up deps
         with pytest.raises(
-            PlannerCycleError, match="Dependency cycle: .* depends on itself"
+            PlannerError, match="Dependency cycle: .* depends on itself"
         ):
             planner.validate_reg_queue()
 

@@ -21,10 +21,6 @@ class PlannerError(RacewayError):
     pass
 
 
-class PlannerCycleError(PlannerError):
-    pass
-
-
 def configure_planner() -> IPlanner:
     return Planner(reg_queue={})
 
@@ -85,11 +81,11 @@ class Planner(IPlanner):
                 end_idx = topo.get(end, None)
                 if end_idx is not None:
                     if start_idx > end_idx:
-                        raise PlannerCycleError(
+                        raise PlannerError(
                             f"Dependency cycle: {start} depends on {end} but {end} required before {start}."  # noqa B950
                         )
                     elif start_idx == end_idx:
-                        raise PlannerCycleError(
+                        raise PlannerError(
                             f"Dependency cycle: {start} depends on itself."
                         )
                 else:
