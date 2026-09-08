@@ -1,3 +1,7 @@
+"""
+@TODO: The Cabled/DepSpec redundancy is kind of growing, not sure if it matters.
+Maybe they are really meant to be independent and will grow further apart?  
+"""
 from annotationlib import Format, call_evaluate_function
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -13,6 +17,7 @@ from typing import (
 
 from .exc import RacewayError
 from .registration import DepSpec
+from .protocols import IExtractor, IDepSpec
 
 
 class ExtractionError(RacewayError):
@@ -23,15 +28,6 @@ class ExtractionError(RacewayError):
 class Cabled[S]:
     """
     Mark a dependency as "Cabled" to have it injected.
-
-    example
-
-    @configure_as_service
-    class ImageService:
-        db: Annotated[ISession, Cabled] # class spec
-        file_path: Annotated[str, Cabled(IConfig, key='config.file_path')] # spec instance with proto and custom kwargs
-        fs_api: IFileSystem # without spec
-
     """
 
     proto: type[S] | None = None
@@ -42,20 +38,63 @@ class Cabled[S]:
     call_args: tuple | None = None
     call_kwargs: tuple[tuple[str, object], ...] | None = None
 
-    def to_dep_spec(self) -> DepSpec:
+    def to_dep_spec(self) -> IDepSpec:
         if self.proto is None:
             raise ExtractionError("Cannot generate DepSpec without protocol.")
+        call_args = validate_call_args(self.call_args)
+        call_kwargs = validate_call_kwargs(self.call_kwargs)
         return DepSpec(
             proto=self.proto,
             attr=self.attr,
             key=self.key,
-            call_args=self.call_args,
-            call_kwargs=self.call_kwargs,
+            call_args=call_args,
+            call_kwargs=call_kwargs,
         )
 
 
+def validate_call_args(call_args) -> tuple|None:
+    """
+    Validate call args.
+
+    @NOTE: This is only meant to be run at "startup" so it can be sloOOOow.
+
+    Also this is mainly because this is so easier to paren-soup into a weird bug.
+    """
+    if call_args is not None and not isinstance(call_args, tuple):
+        raise ExtractionError('Call args must be None|tuple')
+    return call_args
+
+
+def validate_call_kwargs(call_kwargs) -> tuple[tuple[str, object], ...]|None:
+    """
+    Validate call kwargs.
+
+    @NOTE: This is only meant to be run at "startup" so it can be sloOOOow.
+
+    Also this is mainly because this is so easier to paren-soup into a weird bug.
+    """
+    type_error_msg = 'Call kwargs must be None|tuple[tuple[str, object], ...].'
+    if call_kwargs is not None:
+        if not isinstance(call_kwargs, tuple):
+            raise ExtractionError(type_error_msg)
+        for arg in call_kwargs:
+            if not isinstance(arg, tuple) or len(arg) != 2 or not isinstance(arg[0], str):
+                raise ExtractionError('Call kwargs must be None|tuple[tuple[str, object], ...].')
+    return call_kwargs
+
+
+def default_can_resolve_without_spec(proto: object | type):
+    return isinstance(proto, type) and is_protocol(proto)
+
+
+def configure_extractor(can_resolve_without_spec: Callable[[object | type], bool] | None = None) -> IExtractor:
+    if can_resolve_without_spec is None:
+        can_resolve_without_spec = default_can_resolve_without_spec
+    return Extractor(can_resolve_without_spec=can_resolve_without_spec)
+
+
 @dataclass
-class Extractor:
+class Extractor(IExtractor):
     """Extractor dependency specs from annotations."""
 
     can_resolve_without_spec: Callable[[object | type], bool] | None = None
@@ -71,7 +110,7 @@ class Extractor:
     def extract(
         self,
         service_factory: Callable,
-    ) -> tuple[tuple[str, DepSpec], ...]:
+    ) -> tuple[tuple[str, IDepSpec], ...]:
         """
         Extract any dependency specifications we find.
         """
