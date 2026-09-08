@@ -65,3 +65,15 @@ class IStarter(Protocol):
         self,
         planner: IPlanner,
     ) -> IContainer: ...
+
+
+class IExtractor(Protocol):
+    def extract(
+        self,
+        service_factory: Callable,
+    ) -> tuple[tuple[str, IDepSpec], ...]: ...
+
+
+class ILoader(Protocol):
+    planner: IPlanner
+    extractor: IExtractor
