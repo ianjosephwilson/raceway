@@ -3,11 +3,11 @@ from typing import Annotated, Protocol
 
 import pytest
 
-from raceway.extractor import Extractor, Cabled
+from raceway.extractor import configure_extractor, Cabled
 from raceway.registration import Registration
-from raceway.planner import Planner
+from raceway.planner import configure_planner
 from raceway.starter import Starter
-from raceway.protocols import IContainer
+from raceway.protocols import IContainer, ITask
 
 
 class ISettings(Protocol):
@@ -79,8 +79,8 @@ class TestMakeService:
 
     @pytest.fixture
     def container(self):
-        ex = Extractor()
-        planner = Planner(reg_queue={})
+        ex = configure_extractor()
+        planner = configure_planner(task_proto=ITask)
         planner.queue_registration(
             IConfig,
             Registration(ConfigService, ex.extract(ConfigService), scope="startup"),

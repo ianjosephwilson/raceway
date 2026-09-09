@@ -50,6 +50,9 @@ class IContainer(Protocol):
 
 
 class IPlanner(Protocol):
+
+    def get_task_proto(self) -> object: ...
+
     def queue_registration(
         self,
         proto: IMarker,

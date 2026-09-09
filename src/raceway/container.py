@@ -38,9 +38,10 @@ def create_container_cache() -> (
 def configure_container(
     registry: IRegistry,
     startup_task: ITask,
+    task_proto
 ) -> IContainer:
     cache = create_container_cache()
-    return Container(cache=cache, registry=registry, startup_task=startup_task)
+    return Container(cache=cache, registry=registry, startup_task=startup_task, task_proto=task_proto)
 
 
 @dataclass
@@ -51,6 +52,8 @@ class Container(IContainer):
     registry: IRegistry
 
     startup_task: ITask
+
+    task_proto: object
 
     def make_service[S](
         self,
@@ -81,6 +84,12 @@ class Container(IContainer):
         proto: type[T],
         task: ITask | None = None,
     ) -> T:
+        if self.task_proto is not None and proto is self.task_proto:
+            if task is None:
+                raise ContainerError(
+                    "Cannot find task because no task was provided!"
+                )
+            return task #  type: ignore @TODO: Resolve this when we rewrite all the types.
         reg = self.registry.find(proto)
         if reg is None:
             raise ContainerError(

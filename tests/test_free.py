@@ -5,7 +5,8 @@ from typing import Protocol, cast
 
 from raceway.container import Container
 from raceway.starter import Starter
-from raceway.planner import Planner
+from raceway.planner import configure_planner
+from raceway.protocols import ITask
 from raceway.registration import Registration, DepSpec
 
 
@@ -86,7 +87,7 @@ def get_current_task() -> ITask:
 
 def test_free():
     """Simple recursive test, no concurrency at all."""
-    planner = Planner(reg_queue={})
+    planner = configure_planner(task_proto=ITask)
     planner.queue_registration(
         ITaskRunner,
         Registration(

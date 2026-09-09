@@ -5,7 +5,8 @@ Full
 from dataclasses import dataclass
 from typing import Protocol
 
-from raceway.planner import Planner
+from raceway.planner import configure_planner
+from raceway.protocols import ITask
 from raceway.registration import (
     DepSpec,
     Registration,
@@ -50,7 +51,7 @@ class DummyRequest:
 
 
 def test_main():
-    planner = Planner(reg_queue={})
+    planner = configure_planner(task_proto=ITask)
 
     planner.queue_registration(IService1, Registration(Service1, (), scope="startup"))
     planner.queue_registration(

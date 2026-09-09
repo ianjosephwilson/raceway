@@ -21,8 +21,8 @@ class PlannerError(RacewayError):
     pass
 
 
-def configure_planner() -> IPlanner:
-    return Planner(reg_queue={})
+def configure_planner(task_proto) -> IPlanner:
+    return Planner(reg_queue={}, task_proto=task_proto)
 
 
 @dataclass
@@ -32,6 +32,11 @@ class Planner(IPlanner):
     """
 
     reg_queue: dict[IMarker, IRegistration]
+
+    task_proto: object
+
+    def get_task_proto(self) -> object:
+        return self.task_proto
 
     def queue_registration(self, proto: IMarker, reg: IRegistration) -> None:
         if proto in self.reg_queue:
@@ -53,14 +58,20 @@ class Planner(IPlanner):
         for proto, reg in self.reg_queue.items():
             for dep_name, dep_spec in reg.dep_specs:
                 dep_lookup[proto].append(dep_spec.proto)
-                dep_reg = self.reg_queue.get(dep_spec.proto)
-                if dep_reg is None:
+                # Special handling for the actual task protocol.
+                if dep_spec.proto is self.task_proto:
+                    dep_scope = 'task'
+                else:
+                    dep_reg = self.reg_queue.get(dep_spec.proto)
+                    if dep_reg is None:
+                        raise PlannerError(
+                            f"Missing dependency: {dep_name}: {dep_spec.proto}"
+                        )
+                    dep_scope = dep_reg.scope
+
+                if not can_depend_on(reg.scope, dep_scope):
                     raise PlannerError(
-                        f"Missing dependency: {dep_name}: {dep_spec.proto}"
-                    )
-                elif not can_depend_on(reg.scope, dep_reg.scope):
-                    raise PlannerError(
-                        f"Scope mismatch: {proto}:{reg.scope} cannot depend on {dep_spec.proto}:{dep_reg.scope}"  # noqa B950
+                        f"Scope mismatch: {proto}:{reg.scope} cannot depend on {dep_spec.proto}:{dep_scope}"  # noqa B950
                     )
         for proto in self.reg_queue:
             self._validate_registration(proto, dep_lookup)

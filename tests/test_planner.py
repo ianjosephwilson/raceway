@@ -8,9 +8,10 @@ from raceway.registration import (
     Registration,
 )
 from raceway.planner import (
-    Planner,
+    configure_planner,
     PlannerError,
 )
+from raceway.protocols import ITask
 
 
 #
@@ -106,7 +107,7 @@ class ServiceF(IServiceF):
 @pytest.fixture
 def planner():
     """Create an empty planner."""
-    return Planner(reg_queue={})
+    return configure_planner(task_proto=ITask)
 
 
 class TestCycleCheck:

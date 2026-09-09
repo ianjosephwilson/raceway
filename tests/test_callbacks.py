@@ -10,6 +10,7 @@ from raceway.callbacks import (
 from raceway.extractor import configure_extractor
 from raceway.planner import configure_planner
 from raceway.starter import Starter
+from raceway.protocols import ITask
 
 
 def test_feed_loader_with_mock():
@@ -20,7 +21,7 @@ def test_feed_loader_with_mock():
     """
 
     extractor = configure_extractor()
-    planner = configure_planner()
+    planner = configure_planner(task_proto=ITask)
     loader = configure_loader(planner=planner, extractor=extractor)
     status = {"fed": False}
 
@@ -70,7 +71,7 @@ def test_feed_loader_callback():
     - add 2 integers and check the answer!!!
     """
     extractor = configure_extractor()
-    planner = configure_planner()
+    planner = configure_planner(task_proto=ITask)
     loader = configure_loader(planner=planner, extractor=extractor)
 
     def our_attach(service_factory, callback, category=None):
