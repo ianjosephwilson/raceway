@@ -13,7 +13,7 @@ from raceway.registration import Registration, DepSpec
 #
 # Interfaces.
 #
-class ITask(Protocol):
+class IJobTask(ITask, Protocol):
     def get_job_id(self) -> int: ...
 
 
@@ -44,11 +44,11 @@ class TaskRunner(ITaskRunner):
 @dataclass
 class Strategy(IStrategy):
     # @NOTE: This is poor design but we do it to force this dep.
-    task_api: ITask
+    job_task_api: IJobTask
 
     # @NOTE: This is also poor design, we should just depend on config.
     def calculate(self, multiplier: int) -> int:
-        return self.task_api.get_job_id() * multiplier
+        return self.job_task_api.get_job_id() * multiplier
 
 
 @dataclass
@@ -58,7 +58,7 @@ class Config(IConfig):
 
 
 @dataclass
-class Task(ITask):
+class Task(IJobTask):
     def __hash__(self):
         return id(self)
 
@@ -69,7 +69,7 @@ class Task(ITask):
         return id(self)
 
 
-CurrentTask: ContextVar[ITask | None] = ContextVar("CurrentTask", default=None)
+CurrentTask: ContextVar[IJobTask | None] = ContextVar("CurrentTask", default=None)
 
 
 def handle_task(container) -> int:
@@ -78,7 +78,7 @@ def handle_task(container) -> int:
         return runner.run()
 
 
-def get_current_task() -> ITask:
+def get_current_task() -> IJobTask:
     task = CurrentTask.get()
     if task is None:
         raise AssertionError("Task is not set!")
@@ -87,7 +87,7 @@ def get_current_task() -> ITask:
 
 def test_free():
     """Simple recursive test, no concurrency at all."""
-    planner = configure_planner(task_proto=ITask)
+    planner = configure_planner(task_proto=IJobTask)
     planner.queue_registration(
         ITaskRunner,
         Registration(
@@ -105,7 +105,7 @@ def test_free():
         IStrategy,
         Registration(
             Strategy,
-            (("task_api", DepSpec(proto=ITask)),),
+            (("job_task_api", DepSpec(proto=IJobTask)),),
             scope="task",  # because we depend on task we must be on-task
         ),
     )
@@ -115,14 +115,6 @@ def test_free():
             Config,
             (),
             scope="startup",  # we have no deps so we can be on-startup
-        ),
-    )
-    planner.queue_registration(
-        ITask,
-        Registration(
-            get_current_task,
-            (),
-            scope="task",  # we ARE the task that is on-task
         ),
     )
 

@@ -30,30 +30,33 @@ def create_task_cache() -> WeakValueDictionary[ITask, IService]:
 
 
 def create_container_cache() -> (
-    WeakKeyDictionary[IMarker, WeakValueDictionary[ITask, IService]]
+    WeakKeyDictionary[ITask, WeakValueDictionary[type[IService], IService]]
 ):
     return WeakKeyDictionary()
 
 
 def configure_container(
-    registry: IRegistry,
-    startup_task: ITask,
-    task_proto
+    registry: IRegistry, startup_task: ITask, task_proto: type[ITask]
 ) -> IContainer:
     cache = create_container_cache()
-    return Container(cache=cache, registry=registry, startup_task=startup_task, task_proto=task_proto)
+    return Container(
+        cache=cache, registry=registry, startup_task=startup_task, task_proto=task_proto
+    )
+
+
+from collections.abc import Hashable
 
 
 @dataclass
 class Container(IContainer):
 
-    cache: WeakKeyDictionary
+    cache: WeakKeyDictionary[ITask, WeakValueDictionary]
 
     registry: IRegistry
 
     startup_task: ITask
 
-    task_proto: object
+    task_proto: type[ITask]
 
     def make_service[S](
         self,
@@ -86,10 +89,8 @@ class Container(IContainer):
     ) -> T:
         if self.task_proto is not None and proto is self.task_proto:
             if task is None:
-                raise ContainerError(
-                    "Cannot find task because no task was provided!"
-                )
-            return task #  type: ignore @TODO: Resolve this when we rewrite all the types.
+                raise ContainerError("Cannot find task because no task was provided!")
+            return task  # type: ignore @TODO: Resolve this when we rewrite all the types.
         reg = self.registry.find(proto)
         if reg is None:
             raise ContainerError(

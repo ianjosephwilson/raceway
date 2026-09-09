@@ -19,7 +19,7 @@ class DepSpec[T](IDepSpec[T]):
 
 
 @dataclass
-class Registration[T](IRegistration):
+class Registration[T](IRegistration[T]):
 
     factory: Callable[..., T]
     """ Callable whose result in the service. """

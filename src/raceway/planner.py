@@ -3,7 +3,15 @@ from dataclasses import dataclass
 
 from .exc import RacewayError
 from .registry import configure_registry
-from .protocols import ScopeType, IRegistry, IPlanner, IMarker, IRegistration
+from .protocols import (
+    ScopeType,
+    IRegistry,
+    IPlanner,
+    IMarker,
+    IRegistration,
+    ITask,
+    IService,
+)
 
 
 def can_depend_on(scope: ScopeType, dep_scope: ScopeType) -> bool:
@@ -31,14 +39,16 @@ class Planner(IPlanner):
     Build a registry from a cohesive set of registrations.
     """
 
-    reg_queue: dict[IMarker, IRegistration]
+    reg_queue: dict[type[IService], IRegistration]
 
-    task_proto: object
+    task_proto: type[ITask]
 
-    def get_task_proto(self) -> object:
+    def get_task_proto(self) -> type[ITask]:
         return self.task_proto
 
-    def queue_registration(self, proto: IMarker, reg: IRegistration) -> None:
+    def queue_registration[S: IService](
+        self, proto: type[S], reg: IRegistration[S]
+    ) -> None:
         if proto in self.reg_queue:
             raise PlannerError("Each protocol can only be registered once.")
         self.reg_queue[proto] = reg
@@ -60,7 +70,7 @@ class Planner(IPlanner):
                 dep_lookup[proto].append(dep_spec.proto)
                 # Special handling for the actual task protocol.
                 if dep_spec.proto is self.task_proto:
-                    dep_scope = 'task'
+                    dep_scope = "task"
                 else:
                     dep_reg = self.reg_queue.get(dep_spec.proto)
                     if dep_reg is None:

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from .container import configure_container
-from .protocols import IPlanner, IStarter, IContainer
+from .protocols import IPlanner, IStarter, IContainer, ITask
 
 
 @dataclass
-class StartupTask:
+class StartupTask(ITask):
     """
     Special task to use to track objects cached from container startup until shutdown.
     """
@@ -32,6 +32,5 @@ class Starter(IStarter):
         task_proto = planner.get_task_proto()
         startup_task = StartupTask()
         return configure_container(
-            registry=registry,
-            startup_task=startup_task,
-            task_proto=task_proto)
+            registry=registry, startup_task=startup_task, task_proto=task_proto
+        )

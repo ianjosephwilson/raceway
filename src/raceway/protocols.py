@@ -4,10 +4,14 @@ from typing import Protocol, Literal
 type IMarker = object
 
 
-type IService = object
+class IService(Protocol):
+    pass
 
 
-type ITask = object
+class ITask(Protocol):
+
+    def __hash__(self) -> int: ...
+    def __eq__(self, other: object) -> bool: ...
 
 
 type ScopeType = Literal["task"] | Literal["startup"] | Literal["call"]
@@ -30,7 +34,7 @@ class IRegistration[T](Protocol):
 class IRegistry(Protocol):
     def find(
         self,
-        proto: IMarker,
+        proto: type[IService],
     ) -> IRegistration | None: ...
 
 
@@ -44,12 +48,12 @@ class IContainer(Protocol):
 
 class IPlanner(Protocol):
 
-    def get_task_proto(self) -> object: ...
+    def get_task_proto(self) -> type[ITask]: ...
 
-    def queue_registration(
+    def queue_registration[S: IService](
         self,
-        proto: IMarker,
-        reg: IRegistration,
+        proto: type[S],
+        reg: IRegistration[S],
     ) -> None: ...
 
     def create_registry(self) -> IRegistry: ...

@@ -53,14 +53,14 @@ def feed_loader(
         feed()
 
 
-def configure_as_service(
-    proto: object | None = None,
+def configure_as_service[S](
+    proto: type[S],  # @TODO: For now fix this, was object | None = None,
     cv: ContextVar[ILoader | None] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
     category: str = DEFAULT_CATEGORY,
-) -> Callable:
+) -> Callable[[Callable[..., S]], Callable[..., S]]:  # wow
     """
     Decorate a service factory with a callback that can be executed to feed
     its registration to a loader.
@@ -72,13 +72,15 @@ def configure_as_service(
     if attach is None:
         raise CallbackError("Venusian must be installed to use callbacks.")
 
-    def wrapper(service_factory):
+    def wrapper(
+        service_factory: Callable[..., S],
+    ) -> Callable[..., S]:  #: Callable[..., S]) -> Callable[..., S]:
         # Use the service factory as the registration proto
         # if there is no proto
-        if proto is None:
-            register_proto = service_factory
-        else:
-            register_proto = proto
+        # if proto is None:
+        #    register_proto = service_factory
+        # else:
+        register_proto = proto
         # Wrap the service class in a dataclass here in case it is needed
         # at anypoint in the future.  This is almost just for convenience
         # and maybe it should be moved to an extended decorator.
