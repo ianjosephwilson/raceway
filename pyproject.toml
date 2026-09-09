@@ -66,3 +66,6 @@ license-files = ["LICEN[CS]E*"]
 
 [project.urls]
 GitHub="https://github.com/ianjosephwilson/raceway"
+
+[project.optional-dependencies]
+venusian = ["venusian"]
