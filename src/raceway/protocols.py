@@ -35,13 +35,6 @@ class IRegistry(Protocol):
 
 
 class IContainer(Protocol):
-    """def make_service[T](
-        self,
-        proto: type[T],
-        reg: IRegistration,
-        task: ITask | None = None,
-    ) -> T: ..."""
-
     def find_service[T](
         self,
         proto: type[T],
