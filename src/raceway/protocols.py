@@ -1,14 +1,20 @@
 from collections.abc import Callable
 from typing import Protocol, Literal
 
-type IMarker = object
+type IServiceMarker = object
+""" Marker used to track service info.
+
+Usage:
+  - Used as a key to map to a cached serviced instance in the container.
+  - Used as a key to map to a registration in the registry.
+"""
 
 
 class IService(Protocol):
     pass
 
 
-class ITask(Protocol):
+class ITask(IService, Protocol):
 
     def __hash__(self) -> int: ...
     def __eq__(self, other: object) -> bool: ...
@@ -17,8 +23,8 @@ class ITask(Protocol):
 type ScopeType = Literal["task"] | Literal["startup"] | Literal["call"]
 
 
-class IDepSpec[T](Protocol):
-    proto: type[T]
+class IDepSpec(Protocol):
+    proto: IServiceMarker
     attr: str | None
     key: str | None
     call_args: tuple | None = None
@@ -34,26 +40,26 @@ class IRegistration[T](Protocol):
 class IRegistry(Protocol):
     def find(
         self,
-        proto: type[IService],
+        proto: IServiceMarker,
     ) -> IRegistration | None: ...
 
 
 class IContainer(Protocol):
-    def find_service[T](
+    def find_service(
         self,
-        proto: type[T],
+        proto: IServiceMarker,
         task: ITask | None = None,
-    ) -> T: ...
+    ) -> IService: ...
 
 
 class IPlanner(Protocol):
 
-    def get_task_proto(self) -> type[ITask]: ...
+    def get_task_proto(self) -> IServiceMarker: ...
 
-    def queue_registration[S: IService](
+    def queue_registration(
         self,
-        proto: type[S],
-        reg: IRegistration[S],
+        proto: IServiceMarker,
+        reg: IRegistration,
     ) -> None: ...
 
     def create_registry(self) -> IRegistry: ...

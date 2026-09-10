@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from weakref import WeakKeyDictionary, WeakValueDictionary
+from typing import reveal_type
 
 from .exc import RacewayError
 from .protocols import (
@@ -7,7 +8,7 @@ from .protocols import (
     IRegistry,
     ITask,
     IService,
-    IMarker,
+    IServiceMarker,
     IRegistration,
 )
 
@@ -30,13 +31,13 @@ def create_task_cache() -> WeakValueDictionary[ITask, IService]:
 
 
 def create_container_cache() -> (
-    WeakKeyDictionary[ITask, WeakValueDictionary[type[IService], IService]]
+    WeakKeyDictionary[ITask, WeakValueDictionary[IServiceMarker, IService]]
 ):
     return WeakKeyDictionary()
 
 
 def configure_container(
-    registry: IRegistry, startup_task: ITask, task_proto: type[ITask]
+    registry: IRegistry, startup_task: ITask, task_proto: IServiceMarker
 ) -> IContainer:
     cache = create_container_cache()
     return Container(
@@ -56,14 +57,14 @@ class Container(IContainer):
 
     startup_task: ITask
 
-    task_proto: type[ITask]
+    task_proto: IServiceMarker
 
-    def make_service[S](
+    def make_service(
         self,
-        proto: type[S],
+        proto: IServiceMarker,
         reg: IRegistration,
         task: ITask | None = None,
-    ) -> S:
+    ) -> IService:
         deps = {}
         for dep_name, dep_spec in reg.dep_specs:
             result = self.find_service(dep_spec.proto, task=task)
@@ -82,12 +83,12 @@ class Container(IContainer):
             deps[dep_name] = result
         return reg.factory(**deps)
 
-    def find_service[T](
+    def find_service(
         self,
-        proto: type[T],
+        proto: IServiceMarker,
         task: ITask | None = None,
-    ) -> T:
-        if self.task_proto is not None and proto is self.task_proto:
+    ) -> IService:
+        if proto is self.task_proto:
             if task is None:
                 raise ContainerError("Cannot find task because no task was provided!")
             return task  # type: ignore @TODO: Resolve this when we rewrite all the types.

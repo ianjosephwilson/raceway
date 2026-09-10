@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from .protocols import IMarker, IRegistration, IRegistry
+from .protocols import IServiceMarker, IRegistration, IRegistry
 
 
 def configure_registry(
-    registrations: tuple[tuple[IMarker, IRegistration], ...],
+    registrations: tuple[tuple[IServiceMarker, IRegistration], ...],
 ) -> IRegistry:
     return Registry(registrations=MappingProxyType(dict(registrations)))
 
@@ -13,7 +13,7 @@ def configure_registry(
 @dataclass(frozen=True)
 class Registry(IRegistry):
 
-    registrations: MappingProxyType[IMarker, IRegistration]
+    registrations: MappingProxyType[IServiceMarker, IRegistration]
 
-    def find(self, proto: IMarker) -> IRegistration | None:
+    def find(self, proto: IServiceMarker) -> IRegistration | None:
         return self.registrations.get(proto, None)

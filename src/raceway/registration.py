@@ -1,13 +1,13 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from .protocols import ScopeType, IDepSpec, IRegistration
+from .protocols import ScopeType, IDepSpec, IRegistration, IService, IServiceMarker
 
 
 @dataclass
-class DepSpec[T](IDepSpec[T]):
+class DepSpec(IDepSpec):
 
-    proto: type[T]
+    proto: IServiceMarker
     attr: str | None = None
     """ Attribute name to get after resolution. """
     key: str | None = None
@@ -19,9 +19,9 @@ class DepSpec[T](IDepSpec[T]):
 
 
 @dataclass
-class Registration[T](IRegistration[T]):
+class Registration(IRegistration):
 
-    factory: Callable[..., T]
+    factory: Callable[..., IService]
     """ Callable whose result in the service. """
 
     dep_specs: tuple[tuple[str, IDepSpec], ...]

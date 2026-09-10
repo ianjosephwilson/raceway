@@ -6,9 +6,10 @@ from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, is_dataclass
 from inspect import isclass
+from typing import cast
 
 from .exc import RacewayError
-from .protocols import ILoader, IPlanner, IExtractor, ScopeType
+from .protocols import ILoader, IPlanner, IExtractor, ScopeType, IServiceMarker, IService
 from .registration import Registration
 
 DEFAULT_CATEGORY = "raceway.service"
@@ -53,14 +54,14 @@ def feed_loader(
         feed()
 
 
-def configure_as_service[S](
-    proto: type[S],  # @TODO: For now fix this, was object | None = None,
+def configure_as_service(
+    proto: IServiceMarker | None,
     cv: ContextVar[ILoader | None] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
     category: str = DEFAULT_CATEGORY,
-) -> Callable[[Callable[..., S]], Callable[..., S]]:  # wow
+) -> Callable[[Callable[..., IService]], Callable[..., IService]]:
     """
     Decorate a service factory with a callback that can be executed to feed
     its registration to a loader.
@@ -73,14 +74,14 @@ def configure_as_service[S](
         raise CallbackError("Venusian must be installed to use callbacks.")
 
     def wrapper(
-        service_factory: Callable[..., S],
-    ) -> Callable[..., S]:  #: Callable[..., S]) -> Callable[..., S]:
+        service_factory: Callable[..., IService],
+    ) -> Callable[..., IService]:
         # Use the service factory as the registration proto
         # if there is no proto
-        # if proto is None:
-        #    register_proto = service_factory
-        # else:
-        register_proto = proto
+        if proto is None:
+            register_proto = cast(IServiceMarker, service_factory)
+        else:
+            register_proto = proto
         # Wrap the service class in a dataclass here in case it is needed
         # at anypoint in the future.  This is almost just for convenience
         # and maybe it should be moved to an extended decorator.

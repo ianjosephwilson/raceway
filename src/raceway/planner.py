@@ -7,10 +7,11 @@ from .protocols import (
     ScopeType,
     IRegistry,
     IPlanner,
-    IMarker,
+    IServiceMarker,
     IRegistration,
     ITask,
     IService,
+    IServiceMarker,
 )
 
 
@@ -39,15 +40,15 @@ class Planner(IPlanner):
     Build a registry from a cohesive set of registrations.
     """
 
-    reg_queue: dict[type[IService], IRegistration]
+    reg_queue: dict[IServiceMarker, IRegistration]
 
-    task_proto: type[ITask]
+    task_proto: IServiceMarker
 
-    def get_task_proto(self) -> type[ITask]:
+    def get_task_proto(self) -> IServiceMarker:
         return self.task_proto
 
-    def queue_registration[S: IService](
-        self, proto: type[S], reg: IRegistration[S]
+    def queue_registration(
+        self, proto: IServiceMarker, reg: IRegistration
     ) -> None:
         if proto in self.reg_queue:
             raise PlannerError("Each protocol can only be registered once.")
@@ -62,7 +63,7 @@ class Planner(IPlanner):
         - Check for cycles.
 
         """
-        dep_lookup: dict[IMarker, list[IMarker]] = defaultdict(
+        dep_lookup: dict[IServiceMarker, list[IServiceMarker]] = defaultdict(
             list
         )  # Fast-lookup for cycle checks.
         for proto, reg in self.reg_queue.items():
@@ -88,8 +89,8 @@ class Planner(IPlanner):
 
     def _validate_registration(
         self,
-        proto: IMarker,
-        dep_lookup: dict[IMarker, list[IMarker]],
+        proto: IServiceMarker,
+        dep_lookup: dict[IServiceMarker, list[IServiceMarker]],
     ) -> None:
         """Validate registration, mostly just checks for cycles."""
         last_idx = 0
