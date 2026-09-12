@@ -7,8 +7,6 @@ from .protocols import (
     IContainer,
     IRegistry,
     ITask,
-    IService,
-    IServiceMarker,
     IRegistration,
 )
 
@@ -26,45 +24,42 @@ class NotSet:
 NOT_SET = NotSet()
 
 
-def create_task_cache() -> WeakValueDictionary[ITask, IService]:
+def create_task_cache() -> WeakValueDictionary:
     return WeakValueDictionary()
 
 
-def create_container_cache() -> (
-    WeakKeyDictionary[ITask, WeakValueDictionary[IServiceMarker, IService]]
-):
+def create_container_cache() -> WeakKeyDictionary:
     return WeakKeyDictionary()
 
 
-def configure_container(
-    registry: IRegistry, startup_task: ITask, task_proto: IServiceMarker
-) -> IContainer:
+def configure_container[V, W](
+    registry: IRegistry,
+    startup_task: W,
+    task_proto: type[V],
+) -> IContainer[V, W]:
     cache = create_container_cache()
     return Container(
         cache=cache, registry=registry, startup_task=startup_task, task_proto=task_proto
     )
 
 
-from collections.abc import Hashable
-
-
 @dataclass
-class Container(IContainer):
+class Container[V, W](IContainer[V, W]):
 
-    cache: WeakKeyDictionary[ITask, WeakValueDictionary]
+    cache: WeakKeyDictionary
 
     registry: IRegistry
 
-    startup_task: ITask
+    startup_task: W
 
-    task_proto: IServiceMarker
+    task_proto: type[V]
 
-    def make_service(
+    def make_service[T](
         self,
-        proto: IServiceMarker,
-        reg: IRegistration,
-        task: ITask | None = None,
-    ) -> IService:
+        proto: type[T],
+        reg: IRegistration[T],
+        task: V | None = None,
+    ) -> T:
         deps = {}
         for dep_name, dep_spec in reg.dep_specs:
             result = self.find_service(dep_spec.proto, task=task)
@@ -83,11 +78,11 @@ class Container(IContainer):
             deps[dep_name] = result
         return reg.factory(**deps)
 
-    def find_service(
+    def find_service[T](
         self,
-        proto: IServiceMarker,
-        task: ITask | None = None,
-    ) -> IService:
+        proto: type[T],
+        task: V | None = None,
+    ) -> T:
         if proto is self.task_proto:
             if task is None:
                 raise ContainerError("Cannot find task because no task was provided!")

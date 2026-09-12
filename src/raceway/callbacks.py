@@ -9,7 +9,7 @@ from inspect import isclass
 from typing import cast
 
 from .exc import RacewayError
-from .protocols import ILoader, IPlanner, IExtractor, ScopeType, IServiceMarker, IService
+from .protocols import ILoader, IPlanner, IExtractor, ScopeType
 from .registration import Registration
 
 DEFAULT_CATEGORY = "raceway.service"
@@ -54,14 +54,14 @@ def feed_loader(
         feed()
 
 
-def configure_as_service(
-    proto: IServiceMarker | None,
+def configure_as_service[T](
+    proto: type[T],
     cv: ContextVar[ILoader | None] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
     category: str = DEFAULT_CATEGORY,
-) -> Callable[[Callable[..., IService]], Callable[..., IService]]:
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorate a service factory with a callback that can be executed to feed
     its registration to a loader.
@@ -74,14 +74,11 @@ def configure_as_service(
         raise CallbackError("Venusian must be installed to use callbacks.")
 
     def wrapper(
-        service_factory: Callable[..., IService],
-    ) -> Callable[..., IService]:
+        service_factory: Callable[..., T],
+    ) -> Callable[..., T]:
         # Use the service factory as the registration proto
         # if there is no proto
-        if proto is None:
-            register_proto = cast(IServiceMarker, service_factory)
-        else:
-            register_proto = proto
+        register_proto = proto
         # Wrap the service class in a dataclass here in case it is needed
         # at anypoint in the future.  This is almost just for convenience
         # and maybe it should be moved to an extended decorator.
