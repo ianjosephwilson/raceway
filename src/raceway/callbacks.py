@@ -55,7 +55,7 @@ def feed_loader(
 
 
 def configure_as_service[T](
-    proto: type[T],
+    register_proto: type[T],
     cv: ContextVar[ILoader | None] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
@@ -76,9 +76,6 @@ def configure_as_service[T](
     def wrapper(
         service_factory: Callable[..., T],
     ) -> Callable[..., T]:
-        # Use the service factory as the registration proto
-        # if there is no proto
-        register_proto = proto
         # Wrap the service class in a dataclass here in case it is needed
         # at anypoint in the future.  This is almost just for convenience
         # and maybe it should be moved to an extended decorator.
