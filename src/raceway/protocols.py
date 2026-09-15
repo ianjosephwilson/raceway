@@ -37,6 +37,12 @@ class IContainer[V, W](Protocol):
 
     task_proto: type[V]
 
+    def resolve_deps(
+        self,
+        dep_specs: tuple[tuple[str, IDepSpec], ...],
+        task: V | None = None,
+    ) -> tuple[tuple[str, object], ...]: ...
+
     def find_service[T](
         self,
         proto: type[T],
@@ -74,3 +80,11 @@ class IExtractor(Protocol):
 class ILoader(Protocol):
     planner: IPlanner
     extractor: IExtractor
+
+
+class IInjector(Protocol):
+
+    # @TODO: Research param spec / typing to try to figure out partial protocol
+    # for the return callable here because it requires container and task
+    # ... we might need to lift the task proto into this protocol.
+    def wrap_in_inject(self, func: Callable) -> Callable: ...

@@ -6,7 +6,6 @@ from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, is_dataclass
 from inspect import isclass
-from typing import cast
 
 from .exc import RacewayError
 from .protocols import ILoader, IPlanner, IExtractor, ScopeType
