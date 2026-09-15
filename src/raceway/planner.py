@@ -8,7 +8,6 @@ from .protocols import (
     IRegistry,
     IPlanner,
     IRegistration,
-    ITask,
 )
 
 

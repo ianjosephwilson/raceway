@@ -102,7 +102,7 @@ def configure_extractor(
     return Extractor(can_resolve_without_spec=can_resolve_without_spec)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Extractor(IExtractor):
     """Extractor dependency specs from annotations."""
 
