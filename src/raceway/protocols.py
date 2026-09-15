@@ -63,13 +63,6 @@ class IPlanner[V](Protocol):
     def create_registry(self) -> IRegistry: ...
 
 
-class IStarter(Protocol):
-    def start(
-        self,
-        planner: IPlanner,
-    ) -> IContainer: ...
-
-
 class IExtractor(Protocol):
     def extract(
         self,

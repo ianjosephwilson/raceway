@@ -11,7 +11,7 @@ from raceway.registration import (
     DepSpec,
     Registration,
 )
-from raceway.starter import Starter
+from raceway.starter import startup
 
 
 class IService1(Protocol):
@@ -62,7 +62,7 @@ def test_main():
             scope="task",
         ),
     )
-    container = Starter().start(planner=planner)
+    container = startup(planner=planner)
     task1 = DummyRequest()
     api2 = container.find_service(IService2, task=task1)
     assert api2.action2() == "1;2;"

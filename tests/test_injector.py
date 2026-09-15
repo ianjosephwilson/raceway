@@ -6,7 +6,7 @@ import pytest
 from raceway.extractor import configure_extractor
 from raceway.registration import Registration
 from raceway.planner import configure_planner
-from raceway.starter import Starter
+from raceway.starter import startup
 from raceway.injector import configure_injector
 from raceway.protocols import IContainer, ITask, IInjector, IExtractor
 
@@ -66,7 +66,7 @@ class TestWrapInInject:
                 PainterService, extractor_api.extract(PainterService), scope="task"
             ),
         )
-        yield Starter().start(planner=planner)
+        yield startup(planner=planner)
 
     def test_wrap_no_overrides(
         self, container_api: IContainer, injector_api: IInjector

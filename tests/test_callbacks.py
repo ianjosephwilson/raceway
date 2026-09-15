@@ -9,7 +9,7 @@ from raceway.callbacks import (
 )
 from raceway.extractor import configure_extractor
 from raceway.planner import configure_planner
-from raceway.starter import Starter
+from raceway.starter import startup
 from raceway.protocols import ITask
 
 
@@ -86,7 +86,7 @@ def test_feed_loader_callback():
             del cls.__raceway_cb__
 
     feed_loader(loader, feed)
-    container = Starter().start(planner=planner)
+    container = startup(planner=planner)
     calculator_api = container.find_service(ICalculator)
     # Hoping for a miracle here
     assert calculator_api.add(1, 1) == 2

@@ -6,7 +6,7 @@ import pytest
 from raceway.extractor import configure_extractor, Cabled
 from raceway.registration import Registration
 from raceway.planner import configure_planner
-from raceway.starter import Starter
+from raceway.starter import startup
 from raceway.protocols import IContainer, ITask
 
 
@@ -91,7 +91,7 @@ class TestMakeService:
                 ColorizerService, ex.extract(ColorizerService), scope="startup"
             ),
         )
-        yield Starter().start(planner=planner)
+        yield startup(planner=planner)
 
     def test_attr_and_key(self, container: IContainer):
         colorizer_api = container.find_service(IColorizer, task=None)

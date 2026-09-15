@@ -4,7 +4,7 @@ import gc
 from typing import Protocol, cast
 
 from raceway.container import Container
-from raceway.starter import Starter
+from raceway.starter import startup
 from raceway.planner import configure_planner
 from raceway.protocols import ITask
 from raceway.registration import Registration, DepSpec
@@ -121,7 +121,7 @@ def test_free():
     #
     # We cast this because we are going to introspect the non-public API.
     #
-    container = cast(Container, Starter().start(planner=planner))
+    container = cast(Container, startup(planner=planner))
     config = container.find_service(IConfig)  # Save off to keep cached.
     results = [
         handle_task(container),
