@@ -4,20 +4,11 @@ from dataclasses import dataclass
 from .exc import RacewayError
 from .registry import configure_registry
 from .protocols import (
-    ScopeType,
     IRegistry,
     IPlanner,
     IRegistration,
 )
-
-
-def can_depend_on(scope: ScopeType, dep_scope: ScopeType) -> bool:
-    if dep_scope == "startup":
-        return scope in ("call", "task", "startup")
-    elif dep_scope == "task":
-        return scope in ("call", "task")
-    else:  # call
-        return scope == "call"
+from .rules import can_depend_on
 
 
 class PlannerError(RacewayError):

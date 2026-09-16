@@ -24,7 +24,9 @@ class Injector[V](IInjector):
 
     task_proto: type[V]
 
-    def wrap_in_inject(self, func: Callable) -> Callable:
+    def wrap_in_inject(
+        self, func: Callable, validate_with_container: IContainer | None = None
+    ) -> Callable:
         """Wrap a function call in a function that first resolves any
         dependencies, any remaining kwargs must be passed when executed.
 
@@ -36,6 +38,11 @@ class Injector[V](IInjector):
         """
         # Extract the deps now...
         dep_specs = self.extractor.extract(func)
+
+        # We will just do the simplest checks possible for now and assume
+        # the configuration is complete otherwise just fail at runtime.
+        if validate_with_container is not None:
+            validate_with_container.validate_dep_specs(dep_specs, scope="call")
 
         def inject_then_call(
             container: IContainer,

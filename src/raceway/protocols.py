@@ -37,6 +37,12 @@ class IContainer[V, W](Protocol):
 
     task_proto: type[V]
 
+    def validate_dep_specs(
+        self,
+        dep_specs: tuple[tuple[str, IDepSpec], ...],
+        scope: ScopeType = "call",
+    ) -> None: ...
+
     def resolve_deps(
         self,
         dep_specs: tuple[tuple[str, IDepSpec], ...],

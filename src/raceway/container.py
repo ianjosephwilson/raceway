@@ -7,7 +7,9 @@ from .protocols import (
     IRegistry,
     IRegistration,
     IDepSpec,
+    ScopeType,
 )
+from .rules import can_depend_on
 
 
 class ContainerError(RacewayError):
@@ -53,7 +55,24 @@ class Container[V, W](IContainer[V, W]):
 
     task_proto: type[V]
 
-    def resolve_deps(
+    def validate_dep_specs(
+        self,
+        dep_specs: tuple[tuple[str, IDepSpec], ...],
+        scope: ScopeType = "call",
+    ) -> None:
+        for _, dep_spec in dep_specs:
+            reg = self.registry.find(dep_spec.proto)
+            if reg is None:
+                raise ContainerError(
+                    f"Cannot find registration for given protocol: {dep_spec.proto}"
+                )
+            dep_scope = reg.scope
+            if not can_depend_on(scope, dep_scope):
+                raise ContainerError(
+                    f"Scope mismatch: {scope} cannot depend on {dep_spec.proto}:{dep_scope}"  # noqa B950
+                )
+
+    def resolve_deps(  # @TODO: Should be dep specs too
         self,
         dep_specs: tuple[tuple[str, IDepSpec], ...],
         task: V | None = None,
