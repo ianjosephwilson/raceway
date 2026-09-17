@@ -7,7 +7,7 @@ Notes about deploying a new build.
 - `hatch run lintit`
 - `hatch run shapeit`
 - Bump the version
-  - `hatch version {major,minor,etc.}`
+  - `hatch version {major,minor,micro,etc.}`
 - Update changelog
   - add version below unreleased and make sure unreleased still empty.
 - Commit it
