@@ -4,6 +4,10 @@ CHANGELOG
 Unreleased
 ++++++++++
 
+
+v0.2.2
+++++++++++
+
   - Update README.rst and RELEASE.rst.
   - Add Injector to wrap callables for injecting dependencies.
   - Add callbacks for scanning for services.
