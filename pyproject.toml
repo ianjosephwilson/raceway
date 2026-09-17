@@ -47,6 +47,24 @@ dependencies = [
     "twine",
 ]
 
+[tool.hatch.envs.default.scripts]
+testit="pytest tests"
+checkit=["pyright src tests"]
+lintit=["flake8 src tests"]
+shapeit=["black src tests"]
+buildit=[
+    "python -m build --wheel",
+    "python -m build --sdist",
+    "twine check dist/*.whl"
+]
+tagit=[
+    "git tag -a v`hatch version` -m Version' '`hatch version`",
+    "git push origin v`hatch version`"
+]
+releaseit=[
+    "twine upload dist/*",
+]
+
 [project]
 name = "raceway"
 description = "Simple dependency injection system. "
