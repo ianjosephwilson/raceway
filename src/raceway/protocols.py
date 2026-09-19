@@ -25,11 +25,19 @@ class IRegistration[T](Protocol):
     scope: ScopeType = "startup"
 
 
+type RegEntryType[T] = tuple[type[T], IRegistration[T]]
+
+
 class IRegistry(Protocol):
     def find[T](
         self,
         proto: type[T],
     ) -> IRegistration[T] | None: ...
+
+    def get_entries_by_scope(
+        self,
+        scope: ScopeType,
+    ) -> tuple[RegEntryType, ...]: ...
 
 
 class IContainer[V, W](Protocol):

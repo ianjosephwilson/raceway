@@ -3,7 +3,7 @@ CHANGELOG
 
 Unreleased
 ++++++++++
-
+  - Add cache warming feature for premaking mainly startup scoped services.
 
 v0.2.2
 ++++++++++
