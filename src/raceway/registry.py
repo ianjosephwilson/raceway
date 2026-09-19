@@ -20,4 +20,6 @@ class Registry(IRegistry):
         self,
         scope: ScopeType,
     ) -> tuple[RegEntryType, ...]:
-        return tuple([(k, v) for (k, v) in self.registrations.items() if v.scope == scope])
+        return tuple(
+            [(k, v) for (k, v) in self.registrations.items() if v.scope == scope]
+        )

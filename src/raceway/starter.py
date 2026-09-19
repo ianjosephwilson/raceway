@@ -29,6 +29,6 @@ def startup(planner: IPlanner, warm: bool = False) -> IContainer:
         registry=registry, startup_task=startup_task, task_proto=task_proto
     )
     if warm:
-        for entry in registry.get_entries_by_scope('startup'):
+        for entry in registry.get_entries_by_scope("startup"):
             _ = container.find_service(entry[0], task=None)
     return container

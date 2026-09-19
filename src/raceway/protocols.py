@@ -28,7 +28,6 @@ class IRegistration[T](Protocol):
 type RegEntryType[T] = tuple[type[T], IRegistration[T]]
 
 
-
 class IRegistry(Protocol):
     def find[T](
         self,
@@ -39,7 +38,6 @@ class IRegistry(Protocol):
         self,
         scope: ScopeType,
     ) -> tuple[RegEntryType, ...]: ...
-
 
 
 class IContainer[V, W](Protocol):
@@ -97,5 +95,3 @@ class IInjector(Protocol):
     # for the return callable here because it requires container and task
     # ... we might need to lift the task proto into this protocol.
     def wrap_in_inject(self, func: Callable) -> Callable: ...
-
-
