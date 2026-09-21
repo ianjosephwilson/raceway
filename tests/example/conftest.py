@@ -3,10 +3,12 @@ Try to emulate a more real-world example of a service container surrounding a ht
 
 HTTPRequest -- this is the "task" that the caching key'ed in.
 """
+
 import pytest
 from dataclasses import dataclass
 from typing import Annotated, Protocol
 from uuid import uuid4
+from _pytest.fixtures import FixtureRequest
 
 from raceway.protocols import IContainer, IInjector, IExtractor, ITask
 from raceway.injector import configure_injector
@@ -18,7 +20,8 @@ from raceway.starter import startup
 
 def pytest_configure(config) -> None:
     config.addinivalue_line(
-        "markers", "http_request(session_kv): session key/value to add to http request session"
+        "markers",
+        "http_request(session_kv): session key/value to add to http request session",
     )
 
 
@@ -29,9 +32,10 @@ class IConfig(Protocol):
 
 class IHTTPRequest(ITask, Protocol):
 
-    id: str
+    request_id: str
     session: dict[str, object]
     path: str
+
 
 class IAuth(Protocol):
 
@@ -51,8 +55,10 @@ class ConfigService(IConfig):
 class HTTPRequest(IHTTPRequest):
     def __hash__(self):
         return id(self)
+
     def __eq__(self, other: object):
         return isinstance(other, HTTPRequest) and self.request_id == other.request_id
+
     request_id: str
     session: dict[str, object]
     path: str
@@ -63,44 +69,42 @@ class AuthService(IAuth):
 
     request: IHTTPRequest
 
-    user_session_key: Annotated[str, Cabled(IConfig, key='auth.session_key')]
+    user_session_key: Annotated[str, Cabled(IConfig, key="auth.session_key")]
 
     def is_logged_in(self) -> bool:
         user_id = self.request.session.get(self.user_session_key, None)
         return isinstance(user_id, str) and len(user_id) > 0
 
-def _config_service_factory() -> IConfigService:
+
+def _config_service_factory() -> IConfig:
     # Just hardecode this for now.
-    return ConfigService(_settings={'auth.session_key': 'user_id'})
+    return ConfigService(_settings={"auth.session_key": "user_id"})
 
 
 def _register_services(planner, extractor_api):
     planner.queue_registration(
         IConfig,
-        Registration(
-            _config_service_factory, (), scope="startup"
-        ),
+        Registration(_config_service_factory, (), scope="startup"),
     )
     planner.queue_registration(
         IAuth,
-        Registration(
-            AuthService, extractor_api.extract(AuthService), scope="task"
-        ),
+        Registration(AuthService, extractor_api.extract(AuthService), scope="task"),
     )
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def container_api(extractor_api):
     planner = configure_planner(task_proto=IHTTPRequest)
     _register_services(planner, extractor_api)
     return startup(planner=planner)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def extractor_api() -> IExtractor:
     return configure_extractor()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def injector_api(extractor_api) -> IInjector:
     return configure_injector(extractor=extractor_api, task_proto=IHTTPRequest)
 
@@ -111,13 +115,13 @@ def config_api(container_api) -> IConfig:
 
 
 @pytest.fixture
-def http_request(request) -> IHTTPRequest:
-    marker = request.node.get_closest_marker('http_request')
-    opts = {'path': '/', 'session': {}, 'request_id': f'request--{str(uuid4())}'}
+def http_request(request: FixtureRequest) -> IHTTPRequest:
+    marker = request.node.get_closest_marker("http_request")
+    opts = {"path": "/", "session": {}, "request_id": f"request--{str(uuid4())}"}
     if marker is not None:
-        session_kv = marker.kwargs.get('session_kv', None)
+        session_kv = marker.kwargs.get("session_kv", None)
         if session_kv is not None:
-            opts['session'][session_kv[0]] = session_kv[1]
+            opts["session"][session_kv[0]] = session_kv[1]
     return HTTPRequest(**opts)
 
 
