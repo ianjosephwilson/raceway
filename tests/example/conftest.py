@@ -1,7 +1,6 @@
 """
-Try to emulate a more real-world example of a service container surrounding a http request.
-
-HTTPRequest -- this is the "task" that the caching key'ed in.
+Try to emulate a more real-world example of a service container surrounding
+http requests.
 """
 
 import pytest
@@ -26,11 +25,13 @@ def pytest_configure(config) -> None:
 
 
 class IConfig(Protocol):
+    """ Manages accesses to configuration set at startup. """
 
     def __getitem__(self, key: str) -> object: ...
 
 
 class IHTTPRequest(ITask, Protocol):
+    """ HTTPRequests are the "tasks" that the caching is keyed to. """
 
     request_id: str
     session: dict[str, object]
@@ -38,6 +39,7 @@ class IHTTPRequest(ITask, Protocol):
 
 
 class IAuth(Protocol):
+    """ Manages authentication logic for application. """
 
     def is_logged_in(self) -> bool: ...
 
