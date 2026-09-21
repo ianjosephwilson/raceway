@@ -14,6 +14,8 @@ include = [
 exclude = [
     "**/__pycache__",
 ]
+venvPath = "." # The directory that contains "all" the virtualenvs
+venv = "../ve" # The actual virtualenv I guess?
 
 [tool.hatch]
 installer = "pip"
