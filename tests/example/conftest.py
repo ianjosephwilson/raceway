@@ -54,9 +54,13 @@ class ConfigService(IConfig):
 @dataclass
 class HTTPRequest(IHTTPRequest):
     def __hash__(self):
-        return id(self)
+        # We use the request id for the hashing function. In case we
+        # need the "same" request to exist more than once.
+        return id(self.request_id)
 
     def __eq__(self, other: object):
+        # We use the request id as "identity"
+        # during equal check instead of `is`.
         return isinstance(other, HTTPRequest) and self.request_id == other.request_id
 
     request_id: str
