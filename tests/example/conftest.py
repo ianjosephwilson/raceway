@@ -82,26 +82,29 @@ class AuthService(IAuth):
         return isinstance(user_id, str) and len(user_id) > 0
 
 
-def _config_service_factory() -> IConfig:
-    # Just hardecode this for now.
-    return ConfigService(_settings={"auth.session_key": "user_id"})
+@pytest.fixture(scope='session')
+def setting_kvs() -> tuple[tuple[str, str], ...]:
+    return (
+        # @NOTE: Not secure.
+        ("auth.cookie_secret", f"test_{str(uuid4).replace('-', '')}"),
+        ("auth.session_key", "user_id"),
+    )
 
 
-def _register_services(planner, extractor_api):
+@pytest.fixture(scope="session")
+def container_api(extractor_api, setting_kvs):
+    def config_service_factory() -> IConfig:
+        """A singleton created during startup."""
+        return ConfigService(_settings=dict(setting_kvs))
+    planner = configure_planner(task_proto=IHTTPRequest)
     planner.queue_registration(
         IConfig,
-        Registration(_config_service_factory, (), scope="startup"),
+        Registration(config_service_factory, (), scope="startup"),
     )
     planner.queue_registration(
         IAuth,
         Registration(AuthService, extractor_api.extract(AuthService), scope="task"),
     )
-
-
-@pytest.fixture(scope="session")
-def container_api(extractor_api):
-    planner = configure_planner(task_proto=IHTTPRequest)
-    _register_services(planner, extractor_api)
     return startup(planner=planner)
 
 
