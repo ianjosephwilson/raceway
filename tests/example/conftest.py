@@ -5,11 +5,11 @@ http requests.
 
 import pytest
 from dataclasses import dataclass
-from typing import Annotated, Protocol
+from typing import Annotated
 from uuid import uuid4
 from _pytest.fixtures import FixtureRequest
 
-from raceway.protocols import IContainer, IInjector, IExtractor, ITask
+from raceway.protocols import IContainer, IInjector, IExtractor
 from raceway.injector import configure_injector
 from raceway.extractor import configure_extractor, Cabled
 from raceway.planner import configure_planner
@@ -73,7 +73,10 @@ def setting_kvs() -> tuple[tuple[str, str], ...]:
 
 
 @pytest.fixture(scope="session")
-def container_api(extractor_api, setting_kvs):
+def container_api(
+    extractor_api: IExtractor,
+    setting_kvs: tuple[tuple[str, str], ...],
+) -> IContainer:
     def config_service_factory() -> IConfig:
         """A singleton created during startup."""
         return ConfigService(_settings=dict(setting_kvs))
@@ -96,12 +99,12 @@ def extractor_api() -> IExtractor:
 
 
 @pytest.fixture(scope="session")
-def injector_api(extractor_api) -> IInjector:
+def injector_api(extractor_api: IExtractor) -> IInjector:
     return configure_injector(extractor=extractor_api, task_proto=IHTTPRequest)
 
 
 @pytest.fixture
-def config_api(container_api) -> IConfig:
+def config_api(container_api: IContainer) -> IConfig:
     return container_api.find_service(IConfig, task=None)
 
 
