@@ -15,6 +15,7 @@ from raceway.extractor import configure_extractor, Cabled
 from raceway.planner import configure_planner
 from raceway.registration import Registration
 from raceway.starter import startup
+from raceway.testing import IConfig, IAuth, IHTTPRequest
 
 
 def pytest_configure(config) -> None:
@@ -22,26 +23,6 @@ def pytest_configure(config) -> None:
         "markers",
         "http_request(session_kv): session key/value to add to http request session",
     )
-
-
-class IConfig(Protocol):
-    """ Manages accesses to configuration set at startup. """
-
-    def __getitem__(self, key: str) -> object: ...
-
-
-class IHTTPRequest(ITask, Protocol):
-    """ HTTPRequests are the "tasks" that the caching is keyed to. """
-
-    request_id: str
-    session: dict[str, object]
-    path: str
-
-
-class IAuth(Protocol):
-    """ Manages authentication logic for application. """
-
-    def is_logged_in(self) -> bool: ...
 
 
 @dataclass
@@ -82,7 +63,7 @@ class AuthService(IAuth):
         return isinstance(user_id, str) and len(user_id) > 0
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def setting_kvs() -> tuple[tuple[str, str], ...]:
     return (
         # @NOTE: Not secure.
@@ -96,6 +77,7 @@ def container_api(extractor_api, setting_kvs):
     def config_service_factory() -> IConfig:
         """A singleton created during startup."""
         return ConfigService(_settings=dict(setting_kvs))
+
     planner = configure_planner(task_proto=IHTTPRequest)
     planner.queue_registration(
         IConfig,
