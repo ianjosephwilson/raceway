@@ -5,16 +5,17 @@ http requests.
 
 import pytest
 from dataclasses import dataclass
-from typing import Annotated, Protocol
+from typing import Annotated
 from uuid import uuid4
 from _pytest.fixtures import FixtureRequest
 
-from raceway.protocols import IContainer, IInjector, IExtractor, ITask
+from raceway.protocols import IContainer, IInjector, IExtractor
 from raceway.injector import configure_injector
 from raceway.extractor import configure_extractor, Cabled
 from raceway.planner import configure_planner
 from raceway.registration import Registration
 from raceway.starter import startup
+from raceway.testing import IConfig, IAuth, IHTTPRequest
 
 
 def pytest_configure(config) -> None:
@@ -22,26 +23,6 @@ def pytest_configure(config) -> None:
         "markers",
         "http_request(session_kv): session key/value to add to http request session",
     )
-
-
-class IConfig(Protocol):
-    """ Manages accesses to configuration set at startup. """
-
-    def __getitem__(self, key: str) -> object: ...
-
-
-class IHTTPRequest(ITask, Protocol):
-    """ HTTPRequests are the "tasks" that the caching is keyed to. """
-
-    request_id: str
-    session: dict[str, object]
-    path: str
-
-
-class IAuth(Protocol):
-    """ Manages authentication logic for application. """
-
-    def is_logged_in(self) -> bool: ...
 
 
 @dataclass
@@ -82,26 +63,33 @@ class AuthService(IAuth):
         return isinstance(user_id, str) and len(user_id) > 0
 
 
-def _config_service_factory() -> IConfig:
-    # Just hardecode this for now.
-    return ConfigService(_settings={"auth.session_key": "user_id"})
+@pytest.fixture(scope="session")
+def setting_kvs() -> tuple[tuple[str, str], ...]:
+    return (
+        # @NOTE: Not secure.
+        ("auth.cookie_secret", f"test_{str(uuid4).replace('-', '')}"),
+        ("auth.session_key", "user_id"),
+    )
 
 
-def _register_services(planner, extractor_api):
+@pytest.fixture(scope="session")
+def container_api(
+    extractor_api: IExtractor,
+    setting_kvs: tuple[tuple[str, str], ...],
+) -> IContainer:
+    def config_service_factory() -> IConfig:
+        """A singleton created during startup."""
+        return ConfigService(_settings=dict(setting_kvs))
+
+    planner = configure_planner(task_proto=IHTTPRequest)
     planner.queue_registration(
         IConfig,
-        Registration(_config_service_factory, (), scope="startup"),
+        Registration(config_service_factory, (), scope="startup"),
     )
     planner.queue_registration(
         IAuth,
         Registration(AuthService, extractor_api.extract(AuthService), scope="task"),
     )
-
-
-@pytest.fixture(scope="session")
-def container_api(extractor_api):
-    planner = configure_planner(task_proto=IHTTPRequest)
-    _register_services(planner, extractor_api)
     return startup(planner=planner)
 
 
@@ -111,12 +99,12 @@ def extractor_api() -> IExtractor:
 
 
 @pytest.fixture(scope="session")
-def injector_api(extractor_api) -> IInjector:
+def injector_api(extractor_api: IExtractor) -> IInjector:
     return configure_injector(extractor=extractor_api, task_proto=IHTTPRequest)
 
 
 @pytest.fixture
-def config_api(container_api) -> IConfig:
+def config_api(container_api: IContainer) -> IConfig:
     return container_api.find_service(IConfig, task=None)
 
 
