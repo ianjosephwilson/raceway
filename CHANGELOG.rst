@@ -1,8 +1,10 @@
 CHANGELOG
 ##########
 
-Unreleased
+v0.2.4
 ++++++++++
+
+  - Expose extractor features from planner itself via `queue_extracted_registration()`.  Also simplifies `Loader`.
 
 v0.2.3
 ++++++++++
