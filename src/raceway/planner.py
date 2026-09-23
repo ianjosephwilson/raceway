@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from .exc import RacewayError
@@ -7,7 +8,10 @@ from .protocols import (
     IRegistry,
     IPlanner,
     IRegistration,
+    IExtractor,
+    ScopeType,
 )
+from .registration import Registration
 from .rules import can_depend_on
 
 
@@ -17,8 +21,8 @@ class PlannerError(RacewayError):
     pass
 
 
-def configure_planner(task_proto) -> IPlanner:
-    return Planner(reg_queue={}, task_proto=task_proto)
+def configure_planner(task_proto, extractor_api: IExtractor) -> IPlanner:
+    return Planner(reg_queue={}, task_proto=task_proto, extractor_api=extractor_api)
 
 
 @dataclass
@@ -31,8 +35,22 @@ class Planner[V](IPlanner):
 
     task_proto: type[V]
 
+    extractor_api: IExtractor
+
     def get_task_proto(self) -> type[V]:
         return self.task_proto
+
+    def queue_extracted_registration[T](
+        self,
+        proto: type[T],
+        service_factory: Callable[..., T],
+        scope: ScopeType,
+    ) -> None:
+        dep_specs = self.extractor_api.extract(service_factory)
+        return self.queue_registration(
+            proto,
+            Registration(factory=service_factory, dep_specs=dep_specs, scope=scope),
+        )
 
     def queue_registration[T](self, proto: type[T], reg: IRegistration[T]) -> None:
         if proto in self.reg_queue:

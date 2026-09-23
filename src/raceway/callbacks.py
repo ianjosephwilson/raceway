@@ -8,8 +8,7 @@ from dataclasses import dataclass, is_dataclass
 from inspect import isclass
 
 from .exc import RacewayError
-from .protocols import ILoader, IPlanner, IExtractor, ScopeType
-from .registration import Registration
+from .protocols import ILoader, IPlanner, ScopeType
 
 DEFAULT_CATEGORY = "raceway.service"
 
@@ -36,11 +35,13 @@ class CallbackError(RacewayError):
 @dataclass
 class Loader(ILoader):
     planner: IPlanner
-    extractor: IExtractor
+
+    def get_planner(self) -> IPlanner:
+        return self.planner
 
 
-def configure_loader(planner: IPlanner, extractor: IExtractor) -> ILoader:
-    return Loader(planner=planner, extractor=extractor)
+def configure_loader(planner: IPlanner) -> ILoader:
+    return Loader(planner=planner)
 
 
 def feed_loader(
@@ -92,9 +93,9 @@ def configure_as_service[T](
                 raise CallbackError(
                     f"{cv} context variable must be set when callback fires."
                 )
-            dep_specs = loader.extractor.extract(service_factory)
-            loader.planner.queue_registration(
-                register_proto, Registration(service_factory, dep_specs, scope=scope)
+            planner = loader.get_planner()
+            planner.queue_extracted_registration(
+                register_proto, service_factory, scope=scope
             )
 
         attach(service_factory, callback, category=category)

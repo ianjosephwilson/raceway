@@ -4,7 +4,6 @@ from typing import Protocol
 import pytest
 
 from raceway.extractor import configure_extractor
-from raceway.registration import Registration
 from raceway.planner import configure_planner
 from raceway.starter import startup
 from raceway.injector import configure_injector
@@ -59,13 +58,8 @@ class TestWrapInInject:
 
     @pytest.fixture
     def container_api(self, extractor_api):
-        planner = configure_planner(task_proto=IJobTask)
-        planner.queue_registration(
-            IPainter,
-            Registration(
-                PainterService, extractor_api.extract(PainterService), scope="task"
-            ),
-        )
+        planner = configure_planner(task_proto=IJobTask, extractor_api=extractor_api)
+        planner.queue_extracted_registration(IPainter, PainterService, scope="task")
         yield startup(planner=planner)
 
     def test_wrap_no_overrides(
