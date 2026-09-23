@@ -21,8 +21,8 @@ def test_feed_loader_with_mock():
     """
 
     extractor = configure_extractor()
-    planner = configure_planner(task_proto=ITask)
-    loader = configure_loader(planner=planner, extractor=extractor)
+    planner = configure_planner(task_proto=ITask, extractor_api=extractor)
+    loader = configure_loader(planner=planner)
     status = {"fed": False}
 
     def feed():
@@ -71,8 +71,8 @@ def test_feed_loader_callback():
     - add 2 integers and check the answer!!!
     """
     extractor = configure_extractor()
-    planner = configure_planner(task_proto=ITask)
-    loader = configure_loader(planner=planner, extractor=extractor)
+    planner = configure_planner(task_proto=ITask, extractor_api=extractor)
+    loader = configure_loader(planner=planner)
 
     def our_attach(service_factory, callback, category=None):
         service_factory.__raceway_cb__ = callback

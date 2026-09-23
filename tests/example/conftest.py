@@ -81,14 +81,15 @@ def container_api(
         """A singleton created during startup."""
         return ConfigService(_settings=dict(setting_kvs))
 
-    planner = configure_planner(task_proto=IHTTPRequest)
+    planner = configure_planner(task_proto=IHTTPRequest, extractor_api=extractor_api)
     planner.queue_registration(
         IConfig,
         Registration(config_service_factory, (), scope="startup"),
     )
-    planner.queue_registration(
+    planner.queue_extracted_registration(
         IAuth,
-        Registration(AuthService, extractor_api.extract(AuthService), scope="task"),
+        AuthService,
+        scope="task",
     )
     return startup(planner=planner)
 

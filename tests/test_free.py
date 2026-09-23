@@ -4,6 +4,7 @@ import gc
 from typing import Protocol, cast
 
 from raceway.container import Container
+from raceway.extractor import configure_extractor
 from raceway.starter import startup
 from raceway.planner import configure_planner
 from raceway.protocols import ITask
@@ -87,7 +88,9 @@ def get_current_task() -> IJobTask:
 
 def test_free():
     """Simple recursive test, no concurrency at all."""
-    planner = configure_planner(task_proto=IJobTask)
+    planner = configure_planner(
+        task_proto=IJobTask, extractor_api=configure_extractor()
+    )
     planner.queue_registration(
         ITaskRunner,
         Registration(

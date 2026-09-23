@@ -3,6 +3,7 @@ from typing import Protocol
 
 import pytest
 
+from raceway.extractor import configure_extractor
 from raceway.registration import (
     DepSpec,
     Registration,
@@ -11,7 +12,7 @@ from raceway.planner import (
     configure_planner,
     PlannerError,
 )
-from raceway.protocols import ITask
+from raceway.protocols import ITask, IExtractor, IPlanner
 
 
 #
@@ -105,31 +106,37 @@ class ServiceF(IServiceF):
 
 
 @pytest.fixture
-def planner():
+def extractor_api() -> IExtractor:
+    """Create default extractor."""
+    return configure_extractor()
+
+
+@pytest.fixture
+def planner_api(extractor_api) -> IPlanner:
     """Create an empty planner."""
-    return configure_planner(task_proto=ITask)
+    return configure_planner(task_proto=ITask, extractor_api=extractor_api)
 
 
 class TestCycleCheck:
 
-    def test_transitive_cycle(self, planner):
+    def test_transitive_cycle(self, planner_api):
         """
         Check for most common cycle: A needs B, B needs C but C needs A.
         """
 
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceA,
             Registration(
                 ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"
             ),
         )
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceB,
             Registration(
                 ServiceB, (("c_api", DepSpec(proto=IServiceC)),), scope="startup"
             ),
         )
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceC,
             Registration(
                 ServiceC, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"
@@ -137,32 +144,32 @@ class TestCycleCheck:
         )
 
         with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
-            planner.validate_reg_queue()
+            planner_api.validate_reg_queue()
 
-    def test_direct_cycle(self, planner):
+    def test_direct_cycle(self, planner_api):
         """
         Check for direct circular: D needs E but E needs D.
         """
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceD,
             Registration(
                 ServiceD, (("e_api", DepSpec(proto=IServiceE)),), scope="startup"
             ),
         )
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceE,
             Registration(
                 ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"
             ),
         )
         with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
-            planner.validate_reg_queue()
+            planner_api.validate_reg_queue()
 
-    def test_self_cycle(self, planner):
+    def test_self_cycle(self, planner_api):
         """
         Check for self reference: A ... but A needs A.
         """
-        planner.queue_registration(
+        planner_api.queue_registration(
             IServiceB,
             Registration(
                 ServiceB, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"
@@ -171,13 +178,15 @@ class TestCycleCheck:
         with pytest.raises(
             PlannerError, match="Dependency cycle: .* depends on itself"
         ):
-            planner.validate_reg_queue()
+            planner_api.validate_reg_queue()
 
 
-def test_duplicate_check(planner):
-    planner.queue_registration(IServiceA, Registration(ServiceA, (), scope="startup"))
+def test_duplicate_check(planner_api):
+    planner_api.queue_registration(
+        IServiceA, Registration(ServiceA, (), scope="startup")
+    )
     with pytest.raises(PlannerError, match="Each protocol can only be registered once"):
-        _ = planner.queue_registration(
+        _ = planner_api.queue_registration(
             IServiceA, Registration(ServiceA, (), scope="startup")
         )
 
@@ -190,13 +199,15 @@ def test_duplicate_check(planner):
         ("call", "task"),
     ],
 )
-def test_scope_check(planner, dep_scope, parent_scope):
-    planner.queue_registration(IServiceB, Registration(ServiceB, (), scope=dep_scope))
-    planner.queue_registration(
+def test_scope_check(planner_api, dep_scope, parent_scope):
+    planner_api.queue_registration(
+        IServiceB, Registration(ServiceB, (), scope=dep_scope)
+    )
+    planner_api.queue_registration(
         IServiceA,
         Registration(
             ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope=parent_scope
         ),
     )
     with pytest.raises(PlannerError, match="Scope mismatch"):
-        planner.validate_reg_queue()
+        planner_api.validate_reg_queue()

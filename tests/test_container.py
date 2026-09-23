@@ -4,7 +4,6 @@ from typing import Annotated, Protocol
 import pytest
 
 from raceway.extractor import configure_extractor, Cabled
-from raceway.registration import Registration
 from raceway.planner import configure_planner
 from raceway.starter import startup
 from raceway.protocols import IContainer, ITask
@@ -80,16 +79,14 @@ class TestMakeService:
     @pytest.fixture
     def container(self):
         ex = configure_extractor()
-        planner = configure_planner(task_proto=ITask)
-        planner.queue_registration(
+        planner = configure_planner(task_proto=ITask, extractor_api=ex)
+        planner.queue_extracted_registration(
             IConfig,
-            Registration(ConfigService, ex.extract(ConfigService), scope="startup"),
+            ConfigService,
+            scope="startup",
         )
-        planner.queue_registration(
-            IColorizer,
-            Registration(
-                ColorizerService, ex.extract(ColorizerService), scope="startup"
-            ),
+        planner.queue_extracted_registration(
+            IColorizer, ColorizerService, scope="startup"
         )
         yield startup(planner=planner)
 

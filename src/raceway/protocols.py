@@ -68,6 +68,13 @@ class IPlanner[V](Protocol):
 
     def get_task_proto(self) -> type[V]: ...
 
+    def queue_extracted_registration[S](
+        self,
+        proto: type[S],
+        service_factory: Callable[..., S],
+        scope: ScopeType,
+    ) -> None: ...
+
     def queue_registration[S](
         self,
         proto: type[S],
@@ -85,8 +92,7 @@ class IExtractor(Protocol):
 
 
 class ILoader(Protocol):
-    planner: IPlanner
-    extractor: IExtractor
+    def get_planner(self) -> IPlanner: ...
 
 
 class IInjector(Protocol):
