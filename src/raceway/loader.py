@@ -53,7 +53,7 @@ def configure_loader(planner: IPlanner) -> ILoader:
 def feed_loader(
     loader: ILoader,
     feed: Callable[[], None],
-    cv: ContextVar[ILoader | None] = LoaderCtx,
+    cv: ContextVar[ILoader] = LoaderCtx,
 ):
     """Setup the loader context and then call feed."""
     with cv.set(loader):
@@ -62,7 +62,7 @@ def feed_loader(
 
 def configure_as_service[T](
     register_proto: type[T],
-    cv: ContextVar[ILoader | None] = LoaderCtx,
+    cv: ContextVar[ILoader] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
