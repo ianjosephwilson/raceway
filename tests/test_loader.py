@@ -8,34 +8,12 @@ from raceway.loader import (
     configure_loader,
     feed_loader,
     configure_as_service,
-    LoaderCtx,
 )
 from raceway.extractor import configure_extractor
 from raceway.planner import configure_planner
 from raceway.starter import startup
 from raceway.protocols import ITask
 from raceway.loader import LoaderError
-
-
-def test_feed_loader_with_mock():
-    """
-    Simulate feed_loader but with a noop
-
-    @TODO: We might just remove this test eventually. I think its redundant.
-    """
-
-    extractor = configure_extractor()
-    planner = configure_planner(task_proto=ITask, extractor_api=extractor)
-    loader = configure_loader(planner=planner)
-    status = {"fed": False}
-
-    def feed():
-        # Noop that just checks we got the right thing and then actually ran.
-        status["fed"] = True
-        assert LoaderCtx.get() == loader
-
-    feed_loader(loader, feed)
-    assert status["fed"]
 
 
 class IMath(Protocol):
