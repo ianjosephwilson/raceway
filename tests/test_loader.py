@@ -64,10 +64,12 @@ class CalculatorService(ICalculator):
 
 @pytest.fixture
 def custom_feed_maker():
-    CUSTOM_CATEGORY = 'custom_category'
+    CUSTOM_CATEGORY = "custom_category"
+
     def _attach(service_factory, callback, category=None):
         assert category == CUSTOM_CATEGORY, "Make sure this comes through."
         service_factory.__raceway_cb__ = callback
+
     def _feed_maker(proto_factory_pairs, scope):
         def feed():
             """
@@ -78,11 +80,15 @@ def custom_feed_maker():
             """
             for proto, factory in proto_factory_pairs:
                 # Execute the decorator as if it was applied with @.
-                configure_as_service(proto, attach=_attach, scope=scope, category=CUSTOM_CATEGORY)(factory)
+                configure_as_service(
+                    proto, attach=_attach, scope=scope, category=CUSTOM_CATEGORY
+                )(factory)
                 # Immdiately execute the callback as if it was scanned.
                 factory.__raceway_cb__(None, None, None)
                 del factory.__raceway_cb__
+
         return feed
+
     return _feed_maker
 
 
@@ -102,7 +108,9 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
     - make a container
     - add 2 integers and check the answer!!!
     """
-    feed = custom_feed_maker([(IMath, MathService), (ICalculator, CalculatorService)], scope="startup")
+    feed = custom_feed_maker(
+        [(IMath, MathService), (ICalculator, CalculatorService)], scope="startup"
+    )
     feed_loader(custom_loader_api, feed)
     container = startup(planner=custom_loader_api.get_planner())
     calculator_api = container.find_service(ICalculator)
@@ -111,6 +119,10 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
 
 
 def test_feed_loader_callback_error(custom_loader_api, custom_feed_maker):
-    feed = custom_feed_maker([(IMath, MathService), (ICalculator, CalculatorService)], scope="startup")
-    with pytest.raises(LoaderError, match=re.compile(".* context variable must be set")):
+    feed = custom_feed_maker(
+        [(IMath, MathService), (ICalculator, CalculatorService)], scope="startup"
+    )
+    with pytest.raises(
+        LoaderError, match=re.compile(".* context variable must be set")
+    ):
         feed()
