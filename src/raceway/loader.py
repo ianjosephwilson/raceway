@@ -1,5 +1,11 @@
 """
-This module provides decorators that attach callbacks that venusian can find.
+Tools to load service registrations dynamically.
+
+Usually venusian would be used to scan files to find callbacks that can
+be called within the scope of a contextvar to queue registrations for services.
+
+Any service could be used though as long as it accesses the loader from
+a contextvar to queue the registration.
 """
 
 from collections.abc import Callable
@@ -24,11 +30,11 @@ except ImportError:
     venusian_attach = None
 
 
-LoaderCtx: ContextVar[ILoader | None] = ContextVar("LoaderCtx")
+LoaderCtx: ContextVar[ILoader] = ContextVar("LoaderCtx")
 """ContextVar that holds the loader during scanning for callbacks."""
 
 
-class CallbackError(RacewayError):
+class LoaderError(RacewayError):
     pass
 
 
@@ -47,7 +53,7 @@ def configure_loader(planner: IPlanner) -> ILoader:
 def feed_loader(
     loader: ILoader,
     feed: Callable[[], None],
-    cv: ContextVar[ILoader | None] = LoaderCtx,
+    cv: ContextVar[ILoader] = LoaderCtx,
 ):
     """Setup the loader context and then call feed."""
     with cv.set(loader):
@@ -56,7 +62,7 @@ def feed_loader(
 
 def configure_as_service[T](
     register_proto: type[T],
-    cv: ContextVar[ILoader | None] = LoaderCtx,
+    cv: ContextVar[ILoader] = LoaderCtx,
     attach: Callable | None = venusian_attach,
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
@@ -71,7 +77,7 @@ def configure_as_service[T](
     a configured loader.
     """
     if attach is None:
-        raise CallbackError("Venusian must be installed to use callbacks.")
+        raise LoaderError("Venusian must be installed to use callbacks.")
 
     def wrapper(
         service_factory: Callable[..., T],
@@ -88,11 +94,12 @@ def configure_as_service[T](
 
         def callback(*_):
             """Callback for venusian scan."""
-            loader = cv.get()
-            if loader is None:
-                raise CallbackError(
+            try:
+                loader = cv.get()
+            except LookupError as e:
+                raise LoaderError(
                     f"{cv} context variable must be set when callback fires."
-                )
+                ) from e
             planner = loader.get_planner()
             planner.queue_extracted_registration(
                 register_proto, service_factory, scope=scope
