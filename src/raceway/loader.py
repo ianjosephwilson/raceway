@@ -1,5 +1,11 @@
 """
-This module provides decorators that attach callbacks that venusian can find.
+Tools to load service registrations dynamically.
+
+Usually venusian would be used to scan files to find callbacks that can
+be called within the scope of a contextvar to queue registrations for services.
+
+Any service could be used though as long as it accesses the loader from
+a contextvar to queue the registration.
 """
 
 from collections.abc import Callable
