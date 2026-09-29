@@ -1,7 +1,7 @@
 CHANGELOG
 ##########
 
-Unreleased
+v0.2.5
 ++++++++++
 
   - Rename callbacks module to loader module.
