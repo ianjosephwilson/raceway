@@ -77,7 +77,7 @@ class Planner[V](IPlanner):
                     dep_reg = self.reg_queue.get(dep_spec.proto)
                     if dep_reg is None:
                         raise PlannerError(
-                            f"Missing dependency: {dep_name}: {dep_spec.proto}"
+                            f"Missing dependency: {proto} depends on {dep_name}={dep_spec.proto}"
                         )
                     dep_scope = dep_reg.scope
 
