@@ -1,6 +1,11 @@
 CHANGELOG
 ##########
 
+Unreleased
+++++++++++
+
+  - Do not include 'return' in dep specs for factory functions.
+
 v0.2.6
 ++++++++++
 
