@@ -126,7 +126,9 @@ class Extractor(IExtractor):
         cables = []
         hints = get_type_hints(service_factory, include_extras=True)
         for k, hint in hints.items():
-
+            if k == "return":
+                # Skip return type hint for callables.
+                continue
             # type MyCabledProto = Annotated[Proto, Cabled]
             if isinstance(hint, TypeAliasType):
                 hint = call_evaluate_function(hint.evaluate_value, Format.VALUE)

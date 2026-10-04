@@ -47,12 +47,25 @@ class ParamsService:
     """ Kitchen sink of various configuration params. """
 
 
+class IFileSystem(Protocol):
+    pass
+
+
+def file_factory(fs: IFileSystem) -> IFile:
+    pass
+
+
 class TestExtract:
 
     @pytest.fixture
     def default_ex(self):
         # Used to be a tractor but its not anymore.
         return Extractor()
+
+    def test_function(self, default_ex):
+        lookup = dict(default_ex.extract(file_factory))
+        assert len(lookup) == 1, "Only one arg exists and do not include 'return'."
+        assert lookup["fs"].proto == IFileSystem
 
     def test_cabled_patterns(self, default_ex):
         dep_specs = default_ex.extract(PatternService)
