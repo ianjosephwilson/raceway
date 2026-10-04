@@ -1,7 +1,7 @@
 CHANGELOG
 ##########
 
-Unreleased
+v0.2.6
 ++++++++++
 
   - Rewrite planner's cycle-check to prevent false positives.
