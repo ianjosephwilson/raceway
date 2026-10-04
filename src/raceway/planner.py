@@ -85,34 +85,60 @@ class Planner[V](IPlanner):
                     raise PlannerError(
                         f"Scope mismatch: {proto}:{reg.scope} cannot depend on {dep_spec.proto}:{dep_scope}"  # noqa B950
                     )
-        for proto in self.reg_queue:
-            self._validate_registration(proto, dep_lookup)
 
-    def _validate_registration[T](
-        self, proto: type[T], dep_lookup: dict[type, list]
-    ) -> None:
-        """Validate registration, mostly just checks for cycles."""
-        last_idx = 0
-        topo = {proto: last_idx}
-        resolve = [proto]
-        while resolve:
-            start = resolve.pop()
-            start_idx = topo[start]
-            for end in dep_lookup.get(start, ()):
-                end_idx = topo.get(end, None)
-                if end_idx is not None:
-                    if start_idx > end_idx:
-                        raise PlannerError(
-                            f"Dependency cycle: {start} depends on {end} but {end} required before {start}."  # noqa B950
-                        )
-                    elif start_idx == end_idx:
-                        raise PlannerError(
-                            f"Dependency cycle: {start} depends on itself."
-                        )
+        self.check_for_cycles(dep_lookup)
+
+    def check_for_cycles(
+        self,
+        children_lookup: dict[object, list[object]],
+    ) -> list[object]:
+        """
+        Check that the dependency graph is a DAG.
+
+        - Every node must be in `children_lookup` even leaves.
+        """
+        topo = []
+        done = set()  # @NOTE: This set is for optimizing containment check.
+        subroots = list(children_lookup.keys())
+        for subroot in subroots:
+            if subroot in done:
+                continue
+            # Use this crude command string to track ascending/descending as we
+            # traverse the dependency graph depth-first right-to-left.
+            moves: list[tuple[str, object]] = [("descend", subroot)]
+            while moves:
+                direction, node = moves.pop()
+                if direction == "ascend":
+                    done.add(node)
+                    # @NOTE: All dependencies for this node must be in the topo.
+                    topo.append(node)
+                elif direction == "descend":
+                    moves.append(("ascend", node))
+                    for child in children_lookup[node]:
+                        if child in done:
+                            continue
+                        elif ("ascend", child) in moves:
+                            if node == child:
+                                raise PlannerError(
+                                    f"Dependency cycle caused by {node} depending on itself."
+                                )
+                            else:
+                                resolution_path = (
+                                    "\n <= ".join(
+                                        [str(a[1]) for a in moves if a[0] == "ascend"]
+                                    )
+                                    + f"\n <=> {child}"
+                                )
+                                e = PlannerError(
+                                    f"Dependency cycle occurred resolving dependencies for {subroot}."
+                                )
+                                e.add_note(resolution_path)
+                                raise e
+                        else:
+                            moves.append(("descend", child))
                 else:
-                    last_idx += 1
-                    topo[end] = last_idx
-                    resolve.append(end)
+                    raise AssertionError(f"Unknown direction {direction=} {node=}")
+        return topo
 
     def create_registry(self) -> IRegistry:
         self.validate_reg_queue()

@@ -18,6 +18,11 @@ from raceway.protocols import ITask, IExtractor, IPlanner
 #
 # Protocols
 #
+class IServiceR(Protocol):
+    def r_action(self):
+        pass
+
+
 class IServiceA(Protocol):
     def a_action(self):
         pass
@@ -51,6 +56,15 @@ class IServiceF(Protocol):
 #
 # Implementations
 #
+@dataclass
+class ServiceR(IServiceR):
+
+    a_api: IServiceA
+
+    def r_action(self):
+        pass
+
+
 @dataclass
 class ServiceA(IServiceA):
 
@@ -119,10 +133,16 @@ def planner_api(extractor_api) -> IPlanner:
 
 class TestCycleCheck:
 
-    def test_transitive_cycle(self, planner_api):
+    def test_indirect_transitive_cycle(self, planner_api):
         """
-        Check for most common cycle: A needs B, B needs C but C needs A.
+        Check for a common cycle: R needs A, A needs B, B needs C but C needs A.
         """
+        planner_api.queue_registration(
+            IServiceR,
+            Registration(
+                ServiceR, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"
+            ),
+        )
 
         planner_api.queue_registration(
             IServiceA,
@@ -143,7 +163,45 @@ class TestCycleCheck:
             ),
         )
 
-        with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
+        with pytest.raises(
+            PlannerError, match="Dependency cycle occurred resolving dependencies for "
+        ):
+            planner_api.validate_reg_queue()
+
+    def test_transitive_cycle(self, planner_api):
+        """
+        Check for most common cycle: A needs B, B needs C but C needs A.
+        """
+
+        planner_api.queue_registration(
+            IServiceR,
+            Registration(
+                ServiceR, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"
+            ),
+        )
+
+        planner_api.queue_registration(
+            IServiceA,
+            Registration(
+                ServiceA, (("b_api", DepSpec(proto=IServiceB)),), scope="startup"
+            ),
+        )
+        planner_api.queue_registration(
+            IServiceB,
+            Registration(
+                ServiceB, (("c_api", DepSpec(proto=IServiceC)),), scope="startup"
+            ),
+        )
+        planner_api.queue_registration(
+            IServiceC,
+            Registration(
+                ServiceC, (("a_api", DepSpec(proto=IServiceA)),), scope="startup"
+            ),
+        )
+
+        with pytest.raises(
+            PlannerError, match="Dependency cycle occurred resolving dependencies for "
+        ):
             planner_api.validate_reg_queue()
 
     def test_direct_cycle(self, planner_api):
@@ -162,7 +220,9 @@ class TestCycleCheck:
                 ServiceE, (("d_api", DepSpec(proto=IServiceD)),), scope="startup"
             ),
         )
-        with pytest.raises(PlannerError, match="Dependency cycle: .* required before"):
+        with pytest.raises(
+            PlannerError, match="Dependency cycle occurred resolving dependencies for "
+        ):
             planner_api.validate_reg_queue()
 
     def test_self_cycle(self, planner_api):
@@ -176,7 +236,7 @@ class TestCycleCheck:
             ),
         )  # Made up deps
         with pytest.raises(
-            PlannerError, match="Dependency cycle: .* depends on itself"
+            PlannerError, match="Dependency cycle caused by .* depending on itself"
         ):
             planner_api.validate_reg_queue()
 
