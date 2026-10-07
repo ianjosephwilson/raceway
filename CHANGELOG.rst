@@ -1,7 +1,7 @@
 CHANGELOG
 ##########
 
-Unreleased
+v0.2.8
 ++++++++++
 
   - Add `factory_kwargs` arg to `configure_as_service` to configure services with truly static configuration.
