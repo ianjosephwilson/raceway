@@ -27,4 +27,7 @@ class Registration[T](IRegistration[T]):
     dep_specs: tuple[tuple[str, IDepSpec], ...]
     """ Tuple of name/spec pairs that must be resolved to pass to factory. """
 
+    factory_kwargs: tuple[tuple[str, object], ...] = ()
+    """ Factory kwargs that will supplement or take precedence over resolved deps. """
+
     scope: ScopeType = "startup"

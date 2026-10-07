@@ -22,6 +22,7 @@ class IDepSpec[T](Protocol):
 class IRegistration[T](Protocol):
     factory: Callable[..., T]
     dep_specs: tuple[tuple[str, IDepSpec], ...]
+    factory_kwargs: tuple[tuple[str, object], ...] = ()
     scope: ScopeType = "startup"
 
 
@@ -73,6 +74,7 @@ class IPlanner[V](Protocol):
         proto: type[S],
         service_factory: Callable[..., S],
         scope: ScopeType,
+        factory_kwargs: tuple[tuple[str, object], ...] = (),
     ) -> None: ...
 
     def queue_registration[S](

@@ -100,8 +100,13 @@ class Container[V, W](IContainer[V, W]):
         reg: IRegistration[T],
         task: V | None = None,
     ) -> T:
-        deps = dict(self.resolve_deps(reg.dep_specs, task=task))
-        return reg.factory(**deps)
+        kwargs = dict(
+            (
+                *self.resolve_deps(reg.dep_specs, task=task),
+                *reg.factory_kwargs,
+            ),  # takes precedence over resolved deps
+        )
+        return reg.factory(**kwargs)
 
     def find_service[T](
         self,

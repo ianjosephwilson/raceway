@@ -67,6 +67,7 @@ def configure_as_service[T](
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
     category: str = DEFAULT_CATEGORY,
+    **factory_kwargs: dict[str, object],
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorate a service factory with a callback that can be executed to feed
@@ -75,6 +76,11 @@ def configure_as_service[T](
     @NOTE: The `cv` must be set with a loader during callback's execution. This
     can be done by passing a `feed()` function into `feed_loader` along with
     a configured loader.
+
+    factory_kwargs:
+        Assume these will be stuck in memory somewhere forever.
+        Usually used for configuration so that the same factory could be
+        used to supply instances configured differently for multiple protocols.
     """
     if attach is None:
         raise LoaderError("Venusian must be installed to use callbacks.")
@@ -102,7 +108,10 @@ def configure_as_service[T](
                 ) from e
             planner = loader.get_planner()
             planner.queue_extracted_registration(
-                register_proto, service_factory, scope=scope
+                register_proto,
+                service_factory,
+                scope=scope,
+                factory_kwargs=tuple((k, v) for (k, v) in factory_kwargs.items()),
             )
 
         attach(service_factory, callback, category=category)

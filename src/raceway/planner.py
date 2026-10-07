@@ -45,11 +45,17 @@ class Planner[V](IPlanner):
         proto: type[T],
         service_factory: Callable[..., T],
         scope: ScopeType,
+        factory_kwargs: tuple[tuple[str, object], ...] = (),
     ) -> None:
         dep_specs = self.extractor_api.extract(service_factory)
         return self.queue_registration(
             proto,
-            Registration(factory=service_factory, dep_specs=dep_specs, scope=scope),
+            Registration(
+                factory=service_factory,
+                dep_specs=dep_specs,
+                scope=scope,
+                factory_kwargs=factory_kwargs,
+            ),
         )
 
     def queue_registration[T](self, proto: type[T], reg: IRegistration[T]) -> None:

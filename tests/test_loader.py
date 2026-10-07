@@ -24,6 +24,10 @@ class ICalculator(Protocol):
     def add(self, a: int, b: int) -> int: ...
 
 
+class IModuloFiveCalculator(ICalculator, Protocol):
+    pass
+
+
 @dataclass
 class MathService(IMath):
 
@@ -40,6 +44,17 @@ class CalculatorService(ICalculator):
         return self.math_api.add(a, b)
 
 
+@dataclass
+class ModuloCalculatorService(IModuloFiveCalculator):
+
+    math_api: IMath
+
+    modulo: int
+
+    def add(self, a: int, b: int) -> int:
+        return self.math_api.add(a, b) % self.modulo
+
+
 @pytest.fixture
 def custom_feed_maker():
     CUSTOM_CATEGORY = "custom_category"
@@ -48,7 +63,7 @@ def custom_feed_maker():
         assert category == CUSTOM_CATEGORY, "Make sure this comes through."
         service_factory.__raceway_cb__ = callback
 
-    def _feed_maker(proto_factory_pairs, scope):
+    def _feed_maker(service_configs, scope):
         def feed():
             """
             Simulate a custom feed function:
@@ -56,10 +71,14 @@ def custom_feed_maker():
             -   immediately run that callback
             -   cleanup the class attribute (@NOTE: This could affect other tests!!!)
             """
-            for proto, factory in proto_factory_pairs:
+            for proto, factory, factory_kwargs in service_configs:
                 # Execute the decorator as if it was applied with @.
                 configure_as_service(
-                    proto, attach=_attach, scope=scope, category=CUSTOM_CATEGORY
+                    proto,
+                    attach=_attach,
+                    scope=scope,
+                    category=CUSTOM_CATEGORY,
+                    **factory_kwargs,
                 )(factory)
                 # Immdiately execute the callback as if it was scanned.
                 factory.__raceway_cb__(None, None, None)
@@ -87,7 +106,12 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
     - add 2 integers and check the answer!!!
     """
     feed = custom_feed_maker(
-        [(IMath, MathService), (ICalculator, CalculatorService)], scope="startup"
+        service_configs=[
+            (IMath, MathService, {}),
+            (ICalculator, CalculatorService, {}),
+            (IModuloFiveCalculator, ModuloCalculatorService, {"modulo": 5}),
+        ],
+        scope="startup",
     )
     feed_loader(custom_loader_api, feed)
     container = startup(planner=custom_loader_api.get_planner())
@@ -95,11 +119,12 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
     # Hoping for a miracle here
     assert calculator_api.add(1, 1) == 2
 
+    calculator_mod5_api = container.find_service(IModuloFiveCalculator)
+    assert calculator_mod5_api.add(6, 5) == 1
+
 
 def test_feed_loader_callback_error(custom_loader_api, custom_feed_maker):
-    feed = custom_feed_maker(
-        [(IMath, MathService), (ICalculator, CalculatorService)], scope="startup"
-    )
+    feed = custom_feed_maker([(IMath, MathService, {})], scope="startup")
     with pytest.raises(
         LoaderError, match=re.compile(".* context variable must be set")
     ):
