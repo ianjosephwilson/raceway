@@ -78,7 +78,7 @@ def custom_feed_maker():
                     attach=_attach,
                     scope=scope,
                     category=CUSTOM_CATEGORY,
-                    **factory_kwargs,
+                    factory_kwargs=factory_kwargs,
                 )(factory)
                 # Immdiately execute the callback as if it was scanned.
                 factory.__raceway_cb__(None, None, None)
@@ -107,9 +107,9 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
     """
     feed = custom_feed_maker(
         service_configs=[
-            (IMath, MathService, {}),
-            (ICalculator, CalculatorService, {}),
-            (IModuloFiveCalculator, ModuloCalculatorService, {"modulo": 5}),
+            (IMath, MathService, ()),
+            (ICalculator, CalculatorService, ()),
+            (IModuloFiveCalculator, ModuloCalculatorService, (("modulo", 5),)),
         ],
         scope="startup",
     )
@@ -124,7 +124,7 @@ def test_feed_loader_callback(custom_loader_api, custom_feed_maker):
 
 
 def test_feed_loader_callback_error(custom_loader_api, custom_feed_maker):
-    feed = custom_feed_maker([(IMath, MathService, {})], scope="startup")
+    feed = custom_feed_maker([(IMath, MathService, ())], scope="startup")
     with pytest.raises(
         LoaderError, match=re.compile(".* context variable must be set")
     ):

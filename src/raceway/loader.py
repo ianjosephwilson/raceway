@@ -67,7 +67,7 @@ def configure_as_service[T](
     scope: ScopeType = "task",
     wrap_in_dataclass: bool = True,
     category: str = DEFAULT_CATEGORY,
-    **factory_kwargs: dict[str, object],
+    factory_kwargs: tuple[tuple[str, object], ...] = (),
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorate a service factory with a callback that can be executed to feed
@@ -111,7 +111,7 @@ def configure_as_service[T](
                 register_proto,
                 service_factory,
                 scope=scope,
-                factory_kwargs=tuple((k, v) for (k, v) in factory_kwargs.items()),
+                factory_kwargs=factory_kwargs,
             )
 
         attach(service_factory, callback, category=category)
