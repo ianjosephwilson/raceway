@@ -1,7 +1,7 @@
 CHANGELOG
 ##########
 
-Unreleased
+v0.2.9
 ++++++++++
 
   - Use `tuple[tuple, ...]` instead of `dict` for `factory_kwargs` in `configure_as_service`.
